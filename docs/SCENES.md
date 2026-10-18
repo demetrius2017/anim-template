@@ -66,9 +66,9 @@
 
 | сцена | файл | режимы `mode` | параметры событий (абсолютные секунды) |
 |---|---|---|---|
-| `sf_backtest` | sf_backtest.js | `headline`: ×100?; `future`: знание будущего; `honest`: 14,1 / 13,2 / 14,7% в год | `detail` |
+| `sf_backtest` | sf_backtest.js | `headline`: ×100? (`context: true` — полный вопрос про SPY); `future`: знание будущего; `honest`: 14,1 / 13,2 / 14,7% в год | `detail`, `context` |
 | `sf_money` | sf_money.js | `credit`, `first`, `salary`, `return`, `overview`: кредит, получатели, зарплата, возврат части прибыли и взносы | `creditAt`, `firstAt`, `salaryAt`, `returnAt`, `detail` |
-| `sf_index` | sf_index.js | `weights`, `large`, `grow`, `refresh`: веса компаний, рост веса и обновление состава S&P 500 | `growAt`, `refreshAt`, `detail` |
+| `sf_index` | sf_index.js | `weights`, `large`, `grow`, `refresh`: веса компаний, рост веса и обновление состава S&P 500; `large` с `closeup: true` — два крупных столбика и разные потоки | `growAt`, `refreshAt`, `detail`, `closeup` |
 | `sf_risk` | sf_risk.js | `tail`: условный веер акций; `drawdown`: максимум просадки −55% / −34% | `riskAt`, `detail` |
 | `sf_market` | sf_market.js | `cost`, `before`, `after`, `control`: один рынок, издержки и управление риском | `detail` |
 

@@ -1,5 +1,6 @@
 // sf_backtest — current-membership bias and honest historical comparison.
 // p.mode: headline | future | honest; p.detail: emphasize warning/results.
+// p.context: plain-language SPY question in headline; omitted preserves legacy art.
 // No event parameters. All data from spy_flow/source, FULL 2011–2026.
 // Cameras: z 1–1.06, ox 0, oy -100. Content y 135–345, captions below 372.
 (() => {
@@ -22,6 +23,13 @@
       g+=P('M180 262 L173 267 L180 272','none',`stroke="${gold}" stroke-width="2"`);
       for(let i=0;i<3;i++)g+=R(48+i*34,167+Math.sin(t*1.5+i)*2,25,35,'#16354b','rx="3"')+L(53+i*34,190,67+i*34,178,gold,2);
       g+=tx(180,326,'ЗНАНИЕ БУДУЩЕГО',p.detail?19:17,gold);
+    }else if(p.context){
+      g+=box(41,141,278,161,gold);
+      g+=tx(180,177,'Стратегия обогнала SPY',16);
+      g+=tx(180,239,'в 100 раз?',40,gold);
+      g+=tx(180,276,'Нынешний состав · 2011–2026',11);
+      g+=coin(300+Math.sin(t*2)*3,213+Math.cos(t*2)*5,7,true);
+      g+=tx(180,329,'КТО УЖЕ ЗНАЛ ПОБЕДИТЕЛЕЙ?',11,cyan);
     }else{
       g+=box(41,141,278,161,gold)+tx(180,169,'КРАСИВЫЙ БЭКТЕСТ',11,dim);
       g+=tx(180,240,'×100?',67,gold);

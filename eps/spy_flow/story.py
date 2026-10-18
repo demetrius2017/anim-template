@@ -54,6 +54,10 @@ def main():
     }
     for i, (pid, scene, mode, cut_word) in enumerate(BEATS):
         params = dict(mode=mode, **events)
+        if pid == "hook":
+            params["context"] = True
+        if pid == "large":
+            params["closeup"] = True
         # Первый кадр уже сформирован к t=0: без заставки и затемнения.
         E.shot(scene, -0.25 if i == 0 else t(pid) - 0.05, params, Z())
         if cut_word:
@@ -64,7 +68,7 @@ def main():
         E.add("chip", t(pid) - 0.05, until if until is not None else te(pid),
               text=text, color=color, x=180, y=y)
 
-    E.add("chip", -0.25, te("hook"), text="×100? Проверьте состав", color="white", x=180, y=92)
+    E.add("chip", -0.25, te("hook"), text="Проверьте состав индекса", color="white", x=180, y=92)
     chip("bias", "Сегодняшний список → в прошлое")
     chip("honest", "Состав на каждую дату")
     chip("first", "Упрощённая схема", until=te("return"))

@@ -1,11 +1,25 @@
 // sf_index — schematic company weights inside the S&P 500 frame.
 // p.mode weights | large | grow | refresh; p.detail emphasizes largest bar.
+// p.closeup: separate two-company comparison in large mode; omitted keeps legacy art.
 // p.growAt, refreshAt: absolute event seconds; omitted means event is active.
 // Cameras z 1–1.06, ox 0, oy -100. Bar heights are illustrative, not market data.
 (() => {
   SCENES.sf_index=function(u,p={},d,t){
     const {tx,box,coin,field,path,gold,cyan,dim,active,note}=SF;
     let g=field(t,'03 / ИНДЕКС');
+    if(p.mode==='large'&&p.closeup){
+      g+=tx(180,148,'ПОТОК В ИНДЕКСНОМ ФОНДЕ',12,cyan);
+      g+=L(180,161,180,178,gold,3);
+      g+=path([[180,178],[98,178],[98,253]],t,3,cyan);
+      for(const offset of [-12,0,12])
+        g+=path([[180,178],[248+offset,178],[248+offset,204]],t+offset*.03,5,gold);
+      g+=R(60,263,76,39,'#205266','rx="5"')+L(60,263,136,263,cyan,2);
+      g+=R(204,214,88,88,'#b3833d','rx="5"')+L(204,214,292,214,gold,3);
+      g+=tx(98,286,'МЕНЬШЕ',11,cyan)+tx(248,264,'БОЛЬШЕ',16);
+      g+=tx(98,321,'Малая компания',10)+tx(248,321,'Крупная компания',10);
+      g+=note('Размеры и потоки условные');
+      return g;
+    }
     g+=box(39,143,282,173,cyan)+tx(180,170,'S&P 500',22,cyan);
     const gr=p.mode==='grow'?active(t,p.growAt):0,rf=p.mode==='refresh'?active(t,p.refreshAt,1.5):0;
     const heights=[39,60,79,105];
