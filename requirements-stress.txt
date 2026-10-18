@@ -2,4 +2,5 @@
 ruaccent>=1.5.8
 razdel>=0.5
 onnxruntime>=1.17
-transformers>=4.40
+# ruaccent ONNX tokenizers require the transformers 4.x input contract.
+transformers>=4.40,<5
