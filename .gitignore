@@ -13,3 +13,6 @@ sfx/*
 !sfx/README.md
 music/*
 !music/README.md
+
+# private owner inputs (names, links, screenshots)
+eps/*/source/private/

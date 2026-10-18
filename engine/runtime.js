@@ -2,25 +2,46 @@
 let S = null;
 const $ = id => document.getElementById(id);
 
-function init(story) { S = story; if (S.look) $('root').classList.add('look-' + S.look); }
+// story.frame — размер сцены в точках ([360, 640] по умолчанию); window.PRELOAD — картинки ролика, декодируются заранее.
+let FW = 360, FH = 640;
+async function init(story) {
+  S = story; if (S.look) $('root').classList.add('look-' + S.look);
+  if (S.frame) {
+    [FW, FH] = S.frame;
+    for (const el of [document.documentElement, document.body, $('stage'), $('grain')]) { el.style.width = FW + 'px'; el.style.height = FH + 'px'; }
+    $('stage').setAttribute('viewBox', `0 0 ${FW} ${FH}`);
+    $('grain').width = FW; $('grain').height = FH;
+    if (FW > FH) $('root').classList.add('land');
+  }
+  await Promise.all((window.PRELOAD || []).map(u => { const im = new Image(); im.src = u; return im.decode().catch(() => {}); }));
+}
 
 function shotAt(t) {
   for (const sh of S.shots) if (t >= sh.t0 && t < sh.t1) return sh;
   return S.shots[S.shots.length - 1];
 }
 
-function camera(sh, t) {
+// Camera hold uses absolute episode time and freezes only the camera clock.
+function cameraState(sh, t) {
   const c = sh.cam || {};
+  for (const [start, end] of (c.hold || [])) {
+    if (t >= start && t < end) { t = start; break; }
+  }
   const u = ease(lin(t, sh.t0, sh.t1));
   const z = mix(c.z0 ?? 1, c.z1 ?? 1.05, u);
   const x = mix(c.x0 ?? 0, c.x1 ?? 0, u), y = mix(c.y0 ?? 0, c.y1 ?? 0, u);
-  // лёгкое «дыхание» камеры
-  const dx = noise1(t * 0.35 + 3) * 1.6, dy = noise1(t * 0.3 + 11) * 1.6;
-  // толчок камеры (удар)
+  const dx = noise1(t * 0.35 + 3) * 1.6 * (c.drift ?? 1);
+  const dy = noise1(t * 0.3 + 11) * 1.6 * (c.drift ?? 1);
   let kick = 0;
   for (const k of (S.kicks || [])) { const a = t - k; if (a >= 0 && a < 0.35) kick += Math.exp(-a * 12) * Math.sin(a * 70) * 3.5; }
-  $('cam').style.transformOrigin = `${180 + (c.ox ?? 0)}px ${320 + (c.oy ?? 0)}px`;
-  $('cam').style.transform = `translate(${f1(x + dx + kick)}px,${f1(y + dy)}px) scale(${z})`;
+  return {x: x + dx + kick * (c.kicks ?? 1), y: y + dy, z,
+          ox: FW / 2 + (c.ox ?? 0), oy: FH / 2 + (c.oy ?? 0)};
+}
+
+function camera(sh, t) {
+  const c = cameraState(sh, t);
+  $('cam').style.transformOrigin = `${c.ox}px ${c.oy}px`;
+  $('cam').style.transform = `translate(${f1(c.x)}px,${f1(c.y)}px) scale(${c.z})`;
 }
 
 // «за вами смотрят»: передний план укрытия поверх кадра, медленный чужой дрейф (o.peek: door | slit | corner)
@@ -46,14 +67,11 @@ function peek(o, t, a) {
     `<defs><filter id="pkb" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${o.soft ?? 7}"/></filter></defs><g filter="url(#pkb)">${g}</g></svg>`;
 }
 
-// точка сцены → экран с учётом камеры кадра (как camera(), без толчков)
+// Point mapping shares the actual camera clock, drift and kick transform.
 function toScreen(sh, t, x, y) {
-  const c = sh.cam || {};
-  const z = mix(c.z0 ?? 1, c.z1 ?? 1.05, ease(lin(t, sh.t0, sh.t1)));
-  const tx = mix(c.x0 ?? 0, c.x1 ?? 0, ease(lin(t, sh.t0, sh.t1))) + noise1(t * 0.35 + 3) * 1.6;
-  const ty = mix(c.y0 ?? 0, c.y1 ?? 0, ease(lin(t, sh.t0, sh.t1))) + noise1(t * 0.3 + 11) * 1.6;
-  const ox = 180 + (c.ox ?? 0), oy = 320 + (c.oy ?? 0);
-  return [ox + (x - ox) * z + tx, oy + (y - oy) * z + ty, z];
+  const c = cameraState(sh, t);
+  return [c.ox + (x - c.ox) * c.z + Number(f1(c.x)),
+          c.oy + (y - c.oy) * c.z + Number(f1(c.y)), c.z];
 }
 // рамка захвата «ВЫ»: o.box [x, y, w, h] в координатах сцены или o.keys [[t, x, y, w, h], ...]; захват за 0.25 с при t0
 function track(o, t) {
@@ -124,27 +142,31 @@ function overlays(t) {
 
 function captions(t) {
   const W = S.words, P = S.pages;
+  const pauseEnd = i => W[P[i][P[i].length - 1]].pause_t1 ?? -Infinity;
+  const pageStart = i => Math.max(W[P[i][0]].t0 - 0.05, i > 0 ? pauseEnd(i - 1) : -Infinity);
   let cur = -1;
   for (let i = 0; i < P.length; i++) {
-    const st = (i === 0 && S.capFrom0) ? -1 : W[P[i][0]].t0 - 0.05;   // capFrom0: первая страница видна уже в нулевом кадре
-    const en = i + 1 < P.length ? Math.min(W[P[i + 1][0]].t0 - 0.05, W[P[i][P[i].length - 1]].t1 + 0.6) : W[P[i][P[i].length - 1]].t1 + 0.6;
+    const st = (i === 0 && S.capFrom0) ? -1 : pageStart(i);   // capFrom0: первая страница видна уже в нулевом кадре
+    const end = Math.max(W[P[i][P[i].length - 1]].t1 + 0.6, pauseEnd(i));
+    const en = i + 1 < P.length ? Math.min(pageStart(i + 1), end) : end;
     if (t >= st && t < en) { cur = i; break; }
   }
   const cap = $('cap');
   if (cur < 0 || (S.capOff || []).some(([a, b]) => t >= a && t < b)) { cap.innerHTML = ''; return; }
-  const p0 = W[P[cur][0]].t0 - 0.05;
+  const p0 = pageStart(cur);
   const pop = 1 + 0.07 * (1 - eout(lin(t, p0, p0 + 0.09)));
   cap.style.transform = `scale(${pop})`;
   cap.innerHTML = P[cur].map(i => {
     const w = W[i];
     const on = t >= w.t0 - 0.02 || (cur === 0 && S.capFrom0);   // первая страница сразу белая: её видно в ленте до старта
-    return `<span class="w ${on ? 'on' : ''} ${w.c || ''}">${w.w}</span>${w.br ? '<br>' : ''}`;
+    const focus = w.focus == null ? '' : ` data-focus="${String(w.focus).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}"`;
+    return `<span class="w ${on ? 'on' : ''} ${w.c || (w.emphasis ? 'y' : '')}"${focus}>${w.w}</span>${w.br ? '<br>' : ''}`;
   }).join('');
 }
 
 let grainCtx = null, grainImg = null;
 function grain(frame) {
-  if (!grainCtx) { grainCtx = $('grain').getContext('2d'); grainImg = grainCtx.createImageData(360, 640); }
+  if (!grainCtx) { grainCtx = $('grain').getContext('2d'); grainImg = grainCtx.createImageData(FW, FH); }
   const d = grainImg.data;
   let s = (frame * 2654435761) >>> 0;
   for (let i = 0; i < d.length; i += 4) {
@@ -190,11 +212,19 @@ function looked(look, body, t) {
     `<g filter="url(#lk_${look})">${body}</g>${over}`;
 }
 
-function render(t, frame) {
+function render(t, frame, mediaFrame) {
   const sh = shotAt(t);
   const fn = SCENES[sh.scene];
   const u = t - sh.t0;
-  const body = fn ? fn(u, sh.p || {}, sh.t1 - sh.t0, t) : '';
+  let body;
+  if ((sh.source || {}).kind === 'video') {
+    if (!mediaFrame) throw new Error('Video frame was not prepared for time ' + t);
+    const fit = sh.source.fit === 'cover' ? 'xMidYMid slice' : 'xMidYMid meet';
+    body = `<rect width="360" height="640" fill="#000"/><image href="${mediaFrame}" width="360" height="640" preserveAspectRatio="${fit}"/>`;
+  } else {
+    if (!fn) throw new Error('Unknown scene: ' + sh.scene);
+    body = fn(u, sh.p || {}, sh.t1 - sh.t0, t);
+  }
   $('stage').innerHTML = defs() + looked((sh.cam || {}).look ?? S.look, body, t);
   camera(sh, t);
   overlays(t);

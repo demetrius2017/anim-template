@@ -70,6 +70,7 @@ python build.py example
 | `engine/scenes/*.js` | сцены (каталог — [docs/SCENES.md](docs/SCENES.md)) |
 | `build.py` | сборка: озвучка → раскадровка → звук → кадры → mp4 |
 | [docs/FORMAT.md](docs/FORMAT.md) | правила формата: хук, ритм, структура, финал |
+| [docs/OPTIONS.md](docs/OPTIONS.md) | горизонтальный кадр 16:9, 2K, данные ролика, голос OpenAI |
 | [CLAUDE.md](CLAUDE.md) | подробная инструкция для ИИ-агента |
 
 Полезные команды:
@@ -80,6 +81,7 @@ python build.py <имя> --skip-tts --sheet  # лист кадров eps/<имя
 python build.py <имя> --skip-tts          # полный рендер без новой озвучки
 python scene_test.py bedroom '{}' --look night   # посмотреть одну сцену
 python stress_check.py --root eps/<имя> --listen  # ударения диктора на слух (нужно: pip install -r requirements-stress.txt)
+RENDER_SCALE=4 ENCODE_CRF=12 python build.py <имя> --skip-tts   # 2K-мастер (для кадра 640×360 — 2560×1440)
 ```
 
 ## Звуки и музыка

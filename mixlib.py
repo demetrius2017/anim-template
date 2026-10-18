@@ -85,15 +85,22 @@ def loop_to(x, n, xf=2.0):
 
 
 def env_follow(x, att=0.03, rel=0.35):
+    """Огибающая; att/rel — постоянные времени в секундах (63% / 1/e)."""
+    if not np.isfinite(att) or not np.isfinite(rel) or att <= 0 or rel <= 0:
+        raise ValueError("att и rel должны быть положительными конечными секундами")
     a = np.abs(x)
+    if not len(a):
+        return np.zeros_like(a)
     a = signal.sosfilt(signal.butter(1, 30, fs=SR, output="sos"), a)
     out = np.zeros_like(a)
-    ca, cr = np.exp(-1 / (att * SR)), np.exp(-1 / (rel * SR))
+    block = 32
+    # Фильтр обновляется раз в block отсчётов, а не на каждом отсчёте.
+    ca, cr = np.exp(-block / (att * SR)), np.exp(-block / (rel * SR))
     v = 0.0
-    for i in range(0, len(a), 32):
+    for i in range(0, len(a), block):
         s = a[i]
         v = ca * v + (1 - ca) * s if s > v else cr * v + (1 - cr) * s
-        out[i:i + 32] = v
+        out[i:i + block] = v
     return out
 
 
@@ -191,7 +198,7 @@ class Mix:
         return next(w["t0"] for w in self.WJ["words"] if w["ph"] == i and w["w"].lower().strip("«».,!?:—").startswith(stem))
 
     def shots(self, scene, key):
-        return [s["p"][key] for s in self.ST["shots"] if s["scene"] == scene and key in s["p"]]
+        return [s['p'][key] for s in self.ST['shots'] if s.get('scene') == scene and key in s.get('p', {})]
 
     # ---- раскладка
     def put(self, src, t, g=1.0, dst=None):
@@ -216,12 +223,19 @@ class Mix:
         return np.pad(x, (0, max(0, self.N - len(x))))[: self.N]
 
     def _voices(self):
-        narr = hp(self._vo("narr"), 75)
+        names = sorted({p.get("voice", "narr") for p in self.WJ["phrases"]})
+        # Не подмешиваем оставшийся от прежнего сценария voice_narr.wav.
+        narr = hp(self._vo("narr"), 75) if "narr" in names else np.zeros(self.N, np.float32)
         self.narr = narr / (np.abs(narr).max() + 1e-9) * db(-3)
-        self.R_NARR = rms(self.narr)
+        raw = {v: self._vo(v) for v in names if v != "narr"}
+        reference = self.narr
+        if not np.any(np.abs(reference) > 1e-4) and raw:
+            reference = max(raw.values(), key=rms)
+            reference = reference / (np.abs(reference).max() + 1e-9) * db(-3)
+        self.R_SPEECH = rms(reference)
+        self.R_NARR = self.R_SPEECH  # Совместимость существующих mix.py.
         self.vo = {}
-        for v in sorted({p["voice"] for p in self.WJ["phrases"]} - {"narr"}):
-            x = self._vo(v)
+        for v, x in raw.items():
             self.vo[v] = x / rms(x) * self.R_NARR * db(-3)
 
     def voice(self, name):
@@ -254,9 +268,15 @@ class Mix:
         return {"bed": nrm(bed, 30), "drone": nrm(drone, 35), "tick": nrm(tick, 300)}
 
     def duck(self, depth=0.6, att=0.03, rel=0.35):
-        """множитель, приглушающий фон под голосом рассказчика"""
-        d = env_follow(self.narr, att=att, rel=rel)
-        return 1 - depth * np.clip(d / (np.percentile(d, 95) + 1e-9), 0, 1)
+        """Приглушение под всеми текущими речевыми дорожками, включая обработанные."""
+        if not np.isfinite(depth) or not 0 <= depth <= 1:
+            raise ValueError("depth должен быть в диапазоне 0..1")
+        # Огибающие считаем отдельно: противоположные фазы голосов не гасят детектор.
+        d = np.maximum.reduce([env_follow(x, att=att, rel=rel)
+                               for x in [self.narr, *self.vo.values()]])
+        active = d[d > max(float(d.max()) * 1e-4, 1e-9)]
+        level = np.percentile(active, 95) if len(active) else 1.0
+        return 1 - depth * np.clip(d / level, 0, 1)
 
     def music(self, segments, level_db=-9, gain_curve=None, duck_depth=0.45):
         """segments: [(файл в music/, с какой секунды файла, с какой секунды ролика, до какой секунды ролика, fade_in)]"""

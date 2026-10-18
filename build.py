@@ -4,6 +4,8 @@
 #   --no-render  только озвучка, раскадровка и звук (быстро; слушать eps/<имя>/audio/mix.wav)
 #   --sheet      лист кадров каждые 1.5 с -> eps/<имя>/qa/sheet.jpg (проверить картинку до полного рендера)
 import argparse, os, pathlib, shutil, subprocess, sys, json
+from engine_contracts import verify_tts_manifest, validate_story, sha256
+from audio_report import write_audio_report
 
 ROOT = pathlib.Path(__file__).parent.resolve()
 PY = sys.executable
@@ -32,13 +34,21 @@ def run(*cmd):
 
 if not a.skip_tts:
     run("tts.py")
+else:
+    os.environ["WORK"] = str(work)   # tts.VOICES учитывает eps/<имя>/tts.json
+    from tts import VOICES
+    try:
+        verify_tts_manifest(work, VOICES)
+    except ValueError as exc:
+        sys.exit(str(exc))
 run(work / "story.py")
-run(work / "mix.py")
 story = work / "build" / "story.json"
+validate_story(json.loads(story.read_text()), work=work)
+run(work / "mix.py")
 
 if a.sheet:
     dur = json.loads(story.read_text())["duration"]
-    ts = [round(k * 1.5, 2) for k in range(int(dur / 1.5) + 1)]
+    ts = [round(k * 1.5, 2) for k in range(int(dur / 1.5) + 1) if k * 1.5 < dur]
     run("render.py", "--story", story, "--at", ",".join(map(str, ts)), "--sheet", work / "qa" / "sheet.jpg")
     sys.exit(0)
 if a.no_render:
@@ -65,11 +75,23 @@ print(f"кадров: {len(list(frames.glob('f*.png')))}")
 out = work / "out" / f"{a.ep}.mp4"
 COLOR = ["-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv"]
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", "30", "-i", str(frames / "f%05d.png"), "-i", str(work / "audio" / "mix.wav"),
-                "-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p", "-c:v", "libx264", "-preset", "slow", "-crf", "17",
+                "-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p", "-c:v", "libx264", "-preset", "slow",
+                "-crf", os.environ.get("ENCODE_CRF", "17"),   # мастер 2K: ENCODE_CRF=12
                 "-profile:v", "high", *COLOR, "-c:a", "aac", "-b:a", "256k", "-movflags", "+faststart", "-shortest", str(out)], check=True)
 # лёгкая копия — переслать в мессенджере, посмотреть на телефоне
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(out), "-c:v", "libx264", "-preset", "slow", "-crf", "23", "-maxrate", "6M", "-bufsize", "12M",
                 *COLOR, "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(work / "out" / f"{a.ep}_small.mp4")], check=True)
+report_path = work / 'build' / 'build_report.json'
+report = write_audio_report([out, work / 'out' / f'{a.ep}_small.mp4'], report_path)
+report['inputs'] = {name: sha256(work / name) for name in
+                    ('build/script.json', 'build/words.json', 'build/story.json', 'audio/mix.wav')}
+report['editorial_status'] = 'unknown'
+report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+for item in report['audio_outputs']:
+    print(f"{pathlib.Path(item['path']).name}: {item['integrated_lufs']} LUFS-I, {item['true_peak_dbtp']} dBTP")
+print(f'отчёт сборки: {report_path}')
 shutil.rmtree(frames)
 for f in sorted((work / "out").glob("*.mp4")):
     print(f"{f.relative_to(ROOT)}  {f.stat().st_size / 1e6:.1f} МБ")
+if not report['audio_targets_pass']:
+    sys.exit('Громкость вне студийных порогов; см. build_report.json (MP4 сохранены)')
