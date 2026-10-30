@@ -1,7 +1,7 @@
 {
   "provider": "elevenlabs_ws",
   "model": "elevenlabs/eleven-v4",
-  "budget_usd": 1,
+  "budget_usd": 0.28512,
   "voices": {
     "narr": {
       "voice": "Brian",

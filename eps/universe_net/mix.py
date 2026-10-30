@@ -1,5 +1,5 @@
 """Own synthesis only, $0 music: low drone, tower tones, gentle bond impacts.
-Final phrase is dry voice over silence; final card is silent. Times are K cues.
+s13 and s15 keep dry voice; finale drone reverses softly and fades to silence.
 """
 from pathlib import Path
 import sys
@@ -13,8 +13,14 @@ from audio_report import write_audio_report
 M = Mix(work=Path(__file__).resolve().parent)
 tt = np.arange(M.N) / SR
 K = M.MK
-drone = (np.sin(2*np.pi*55*tt) + .35*np.sin(2*np.pi*82.4*tt) + .22*np.sin(2*np.pi*110.15*tt))
-drone *= .8 + .2*np.sin(tt*.37)
+# A smooth time turn, centred on the spoken word: forward velocity -> zero
+# on K.reverse -> backwards. Integrated tanh keeps phase and slope continuous.
+delta = tt-K["reverse"]
+turn = .45
+clock = K["reverse"] - turn*(np.logaddexp(delta/turn, -delta/turn)-np.log(2))
+clock -= turn*np.log(2)
+drone = (np.sin(2*np.pi*55*clock) + .35*np.sin(2*np.pi*82.4*clock) + .22*np.sin(2*np.pi*110.15*clock))
+drone *= .8 + .2*np.sin(clock*.37)
 amb = fade(drone, .7, .5)
 amb *= M.R_NARR / rms(amb) * db(-25) * M.duck(.35)
 music = np.zeros(M.N, np.float32)
@@ -26,7 +32,27 @@ for i,key in enumerate(["weight","bond","bond_value","reaction","join","layer","
     M.put(fade(thump(65+i*3,.32,71+i),.035,.15), K[key], db(-28))
 # Fade all backgrounds to exact zero at the first word of s13, including FX tails.
 silence = np.clip((K["silence"]-tt)/.4,0,1)
-amb *= silence; music *= silence; M.fx *= silence
+def smooth_between(a,b):
+    q=np.clip((tt-a)/max(b-a,1/SR),0,1)
+    return q*q*(3-2*q)
+
+# Preserve the entire old s13 pause. Resume at speech s14 (not visual preroll),
+# leave s15 background silent as requested, resume gently for s16.
+finale = smooth_between(K["s14"],K["super_you"])
+finale *= 1-smooth_between(K["s14_end"],K["s15"])
+finale += smooth_between(K["s16"],K["sprout"])
+finale *= 1-smooth_between(K["environment"],K["card"])
+amb *= np.maximum(silence,finale)
+music *= silence; M.fx *= silence
+# Persist the actual envelope for the episode acceptance check.
+(M.work/"build/finale_audio_cues.json").write_text(json.dumps({
+    "silence13": [K["silence"],K["s14"]],
+    "silence15": [K["s15"],K["s16"]],
+    "reverse": K["reverse"], "reverse_softness_seconds": turn,
+    "fade": [K["environment"],K["card"]], "silent_card": [K["card"],K["end"]],
+    "max_background_in_s13_pause": float(np.max(np.abs(amb[(tt>=K["silence"])&(tt<K["s14"])]))),
+    "max_background_on_card": float(np.max(np.abs(amb[tt>=K["card"]]))),
+},ensure_ascii=False,indent=2)+"\n")
 M.finish(amb,music,lufs=-15)
 # Mix.finish retains an extra safety second: trim this episode to exact timeline.
 import subprocess

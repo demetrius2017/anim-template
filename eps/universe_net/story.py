@@ -1,4 +1,4 @@
-"""Step 1: 13 scene contracts, absolute word cues, captions and final hypothesis card.
+"""Finale step 1: 18 scene contracts, measured word cues and last hypothesis card.
 
 Scene writers own engine/scenes/un_<name>.js only. Keep scene names and p.s,
 p.mode, p.K stable. All K times come from measured speech, never hand seconds.
@@ -25,7 +25,12 @@ BEATS = [
     ("10", "un_nested", "nested", "Бесшовный отъезд через минимум три уровня"),
     ("11", "un_cosmos", "return", "Космическая паутина; наезд до двух шаров"),
     ("12", "un_tokens", "sequence", "Проводка по пилюлям к пустой"),
-    ("13", "un_tokens", "final", "Одна пустая пилюля; затем гипотеза и источники"),
+    ("13", "un_tokens", "final", "Прежняя пустая пилюля и тишина; затем s14"),
+    ("14", "un_super", "reveal", "Пустая пилюля → сверх-ты; космический силуэт"),
+    ("15", "un_super", "question", "Силуэт во весь кадр; зачем?; тишина фона"),
+    ("16", "un_aware", "awareness", "Прорастающая сеть; отражение себя; ребёнок"),
+    ("17", "un_reverse", "reverse", "Распад паутины; на вспять плавное восстановление"),
+    ("18", "un_child", "growth", "Ребёнок → взрослый; меняющаяся сетка; отъезд в карточку"),
 ]
 CAM = dict(z0=1, z1=1, x0=0, x1=0, y0=0, y1=0, drift=0, kicks=0)
 SUBS = [
@@ -39,6 +44,17 @@ SUBS = [
 class UniverseEp(Ep):
     def _pages(self):
         words, _ = super()._pages()
+        from PIL import ImageFont
+        font = ImageFont.truetype(str(Path(__file__).resolve().parents[2]/"fonts/PTSerif-Italic.ttf"), 24)
+        def finale(page):
+            return page and int(words[page[0]]["token_id"].split(".")[0]) >= 14
+        def width(page):
+            # Runtime adds 2.5px margin on each side of every word span.
+            return sum(font.getlength(words[i]["w"])+5 for i in page)
+        def splits(page):
+            return [n for n in range(1,len(page)) if max(width(page[:n]),width(page[n:]))<=302]
+        def fits(page):
+            return width(page)<=302 or bool(splits(page))
         # Retain token_map and exact measured times, but group 2–5 words. Break
         # at sentences when possible; single short sentences join the next page.
         for w in words:
@@ -49,18 +65,24 @@ class UniverseEp(Ep):
             new_count = len(w["w"].split())
             prev = words[cur[-1]] if cur else None
             should_break = cur and (count + new_count > 5 or
-                (count >= 2 and re.search(r"[.!?]$", prev["w"])))
+                (count >= 2 and re.search(r"[.!?]$", prev["w"])) or
+                (finale(cur) and not fits(cur+[i])))
             if should_break:
                 pages.append(cur)
                 cur = []
             cur.append(i)
         if cur:
-            if len(cur) == 1 and pages and len(pages[-1]) < 5:
+            if len(cur) == 1 and pages and len(pages[-1]) < 5 and (not finale(cur) or fits(pages[-1]+cur)):
                 pages[-1] += cur
             else:
                 pages.append(cur)
         # Keep at most two short lines. Layout font is episode-scoped in UN.
         for page in pages:
+            if finale(page):
+                if width(page)>302:
+                    cut=min(splits(page),key=lambda n:abs(width(page[:n])-width(page[n:])))
+                    words[page[cut-1]]["br"]=1
+                continue
             total = sum(len(words[i]["w"]) + 1 for i in page)
             if total > 24 and len(page) > 1:
                 candidates = page[:-1]
@@ -74,8 +96,8 @@ def main():
     E.cap_chars, E.cap_lines = 28, 2
     t, te, wf = E.t, E.te, E.wfind
     NUMS[:0] = SUBS
-    K = {f"s{i}": t(str(i)) for i in range(1, 14)}
-    K.update({f"s{i}_end": te(str(i)) for i in range(1, 14)})
+    K = {f"s{i}": t(str(i)) for i in range(1, 19)}
+    K.update({f"s{i}_end": te(str(i)) for i in range(1, 19)})
     K.update({
         "number": t("1"), "weight": wf("1", "вес"), "inside": wf("1", "внутри"),
         "atom": wf("2", "атом"), "ordinary": wf("2", "ничего"),
@@ -100,6 +122,22 @@ def main():
         "hypothesis": t("12"), "if_true": wf("12", "верна"), "universe": wf("12", "вселенная"),
         "next": wf("12", "следующий"), "token": wf("12", "токен"),
         "silence": t("13"), "maybe": wf("13", "возможно"), "final_you": wf("13", "ты"),
+        "super_you": wf("14", bare("сверх-ты")), "superhuman": wf("14", "сверхчеловек"),
+        "why": wf("15", "зачем"), "answer": wf("15", "ответ"), "simple": wf("15", "простой"),
+        "imagine": t("16"), "sprout": wf("16", "прорастает"),
+        "superintelligence": wf("16", "сверхинтеллект"),
+        "realize": wf("16", "осознать"), "self": wf("16", "себя"),
+        "needed": wf("16", "нужен"), "child_intellect": wf("16", "интеллект"),
+        "child": wf("16", "ребёнку"), "awareness": wf("16", "осознанности"),
+        "awareness_universe": t("17"), "direct": wf("17", "направить"),
+        "destruction": wf("17", "разрушения"), "reverse": wf("17", "вспять"),
+        "prolong": wf("17", "продлить"), "life": wf("17", "жизнь"),
+        "child_again": wf("18", "ребёнка"), "growth": wf("18", "ростом"),
+        "adult": wf("18", "человек"), "survive": wf("18", "выживать"),
+        "changing": wf("18", "меняющейся"), "environment": wf("18", "среде"),
+        # Old s13 faded against the old card start. Keep its original trajectory
+        # and the .1 pause + .3 tail while the real card moves after s18.
+        "part2_end": t("14"), "handoff13": te("13"),
         "card": E.wj["voice_end"], "end": E.dur,
     })
     K = {key: round(value, 5) for key, value in K.items()}
@@ -108,8 +146,11 @@ def main():
                         for w in E.W if w["ph"] == E.PIDX[pid]] for pid, *_ in BEATS}
     for i, (pid, scene, mode, _) in enumerate(BEATS):
         handoff = dict(layerHandoff=.6) if scene in ("un_molecule", "un_tower") else {}
+        scene_k = K
+        if int(pid) <= 13:
+            scene_k = {**K, "card": K["part2_end"], "end": round(K["part2_end"]+3, 5)}
         E.shot(scene, 0 if i == 0 else t(pid) - .05,
-               dict(s=f"s{pid}", mode=mode, K=K, **handoff), dict(CAM))
+               dict(s=f"s{pid}", mode=mode, K=scene_k, **handoff), dict(CAM))
     E.add("part", K["card"], E.dur, y=215, size=24,
           text="Гипотеза, а не<br>доказанный факт")
     E.add("part", K["card"], E.dur, y=290, size=15,
@@ -119,6 +160,9 @@ def main():
     (E.work / "build/cues.json").write_text(json.dumps(K, ensure_ascii=False, indent=2)+"\n")
     (E.work / "build/scene_handoff.json").write_text(json.dumps([
         {"id": "s"+pid, "scene": scene, "mode": mode, "start": t(pid), "speech_end": te(pid),
+         "shot_start": 0 if pid == "1" else t(pid)-.05,
+         "shot_end": t(str(int(pid)+1))-.05 if pid != "18" else E.dur,
+         "frame": [360, 640], "render": [1080, 1920], "fps": 30,
          "camera": camera} for pid, scene, mode, camera in BEATS], ensure_ascii=False, indent=2)+"\n")
 
 
