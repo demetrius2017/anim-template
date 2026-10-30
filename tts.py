@@ -24,6 +24,12 @@ if TTS_CFG.get("provider") == "openai":
     for _k, _v in TTS_CFG["voices"].items():
         VOICES[_k] = (f"openai:{TTS_CFG.get('model', 'gpt-4o-mini-tts')}:{_v['voice']}", f"speed:{_v.get('speed', 1)}",
                       "instr:" + hashlib.sha256(_v.get("instructions", "").encode()).hexdigest()[:12])
+elif TTS_CFG.get("provider") == "elevenlabs_ws":
+    import hashlib
+    for _k, _v in TTS_CFG["voices"].items():
+        VOICES[_k] = (f"elevenlabs_ws:{TTS_CFG.get('model', 'elevenlabs/eleven-v4')}:{_v['voice']}",
+                      f"speed:{_v.get('speed', 1)}",
+                      "cfg:" + hashlib.sha256(json.dumps(_v, sort_keys=True).encode()).hexdigest()[:12])
 SR = 48000
 STRESS = "\u0301"
 
@@ -46,6 +52,14 @@ def norm(w):
 
 
 async def synth(text, path, voice="narr", *, rate=None, pitch=None):
+    if TTS_CFG.get("provider") == "elevenlabs_ws":
+        import tts_ws
+        if voice not in TTS_CFG["voices"]:
+            raise ValueError(f"elevenlabs_ws: голос {voice!r} не настроен")
+        cfg = {"model": TTS_CFG.get("model", "elevenlabs/eleven-v4"),
+               "budget_usd": TTS_CFG.get("budget_usd", 1), "work": str(WORK),
+               **TTS_CFG["voices"][voice]}
+        return await asyncio.to_thread(tts_ws.synth, text, path, cfg)
     if TTS_CFG.get("provider") == "openai" and voice in TTS_CFG["voices"]:
         import tts_openai
         cfg = {"model": TTS_CFG.get("model", "gpt-4o-mini-tts"), **TTS_CFG["voices"][voice]}
