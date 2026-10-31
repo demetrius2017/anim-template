@@ -1,11 +1,17 @@
-/* Universe Net — D / s8 brain, s9 chatgpt.
- * p.s: s8|s9; p.mode: brain|chatgpt (both share the same continuous world).
- * p.K: ABSOLUTE cues, including inner, neurons_number, neurons, you, third,
- * chatgpt, s8..s11 and K.words. No local playback clock or mutable frame state.
- * Neutral runtime camera only. Anatomical point cloud -> head -> tower.
- * Local UN_D helpers are shared ONLY with un_nested.js, not added to UN.
- * At s8, actual loss-surface samples flow into the same body cloud; the ball
- * follows a curved path into the brain. UN.wrap softly fades below the scene.
+/* Universe Net v2, phrase 8 up to K.sees: the loss surface lifts into a person.
+ * p.s: s8; p.mode: brain.
+ * p.K: ABSOLUTE cues s8, inner, other_net, neurons_number, neurons, you, sees. No local
+ * playback clock or mutable frame state. Neutral runtime camera only.
+ * Anatomical point cloud -> head. At s8 the top of the right tower stands in frame,
+ * large (SCENES.un_towers.crown): actual loss-surface samples flow into the same
+ * body cloud, the person gathers on that top, the ball follows a curved path into
+ * the brain, and the camera goes for the head by K.neurons_number.
+ * On "ты" a dim «зачем?» comes back beside him.
+ * After "ты" the person shrinks into UN_V2.towers(t,K).figure on the right tower
+ * while the towers fade in; un_towers/sees takes over at K.sees-.05, and without
+ * un_towers.body the person simply shrinks on black.
+ * SCENES.un_person.body(t,K,mode) is raw SVG and holds the last pose past K.sees.
+ * UN.wrap softly fades below the scene.
  */
 (() => {
   const clamp = x => Math.max(0, Math.min(1, x));
@@ -83,53 +89,27 @@
     for(const n of nearest)if(n.j>i)edges.push([i,n.j]);
   }
 
+  // Standing height of the point body in world units, and the y of its soles.
+  const STATURE=295,SOLES=268;
+  // The stance on the crown: small enough to show the tower under his feet.
+  const STAND={scale:.6,y:97},CROWN_ZOOM=6;
   function pose(t,K) {
-    const s8=cue(K,'s8',0),s9=cue(K,'s9',s8+5),s10=cue(K,'s10',s9+3);
-    const travel=between(t, cue(K,'inner',s8),s9-.05);
-    const close=between(t,s9-.05,s10-.2);
-    const scale=.96+1.12*travel+1.75*close;
-    return {cx:180,cy:83+68*travel+33*close,f:850,distance:850,
-      yaw:-.28+.045*Math.sin((t-s8)*.38),pitch:.015,scale};
-  }
-  function tower(t,K,c,opacity=1) {
-    c={...c,yaw:c.yaw-.24,pitch:.19};
-    const start=cue(K,'third',cue(K,'s9',0));
-    const end=cue(K,'chatgpt',start+1)+.45;
-    let s='';
-    for(let i=0;i<8;i++) {
-      const v=between(t,start+(end-start)*i/12,start+(end-start)*(i+4)/12);
-      if(v<=0)continue;
-      // Local fine-dot block: UN.block's standard .8 radius would saturate
-      // these tiny 10-unit layers during the head close-up. UN stays unchanged.
-      const py=17-i*5.3,w=11.2,h=4.5*v,dep=12;
-      const pp=(x,y,z)=>UN.project([x,py+y,z],c);
-      const verts=[];for(const z of [-dep/2,dep/2])for(const y of [-h/2,h/2])for(const x of [-w/2,w/2])verts.push(pp(x,y,z));
-      let layer='';
-      for(const [a,b] of [[0,1],[0,2],[1,3],[2,3],[4,5],[4,6],[5,7],[6,7],[0,4],[1,5],[2,6],[3,7]])
-        layer+=UN.thread(verts[a],verts[b],{width:.48,opacity:.76});
-      const focus=pp(0,h*.15,0);let dots='';
-      for(let iz=0;iz<3;iz++)for(let ix=0;ix<6;ix++) {
-        const pt=pp((ix/5-.5)*w,-h/2,(iz/2-.5)*dep);
-        dots+=`<circle cx="${f(pt.x)}" cy="${f(pt.y)}" r="${f(Math.max(.12,.22*pt.s))}" fill="#fff" opacity=".82"/>`;
-        if((ix+iz)%2===0)layer+=UN.thread(pt,focus,{width:.3,opacity:.27});
-      }
-      layer+=`<g filter="url(#un-soft)" opacity=".35">${dots}</g>${dots}`;
-      s+=`<g opacity="${f(opacity*v)}">${layer}</g>`;
-    }
-    // A single filament joins the layers and catches a slowly moving highlight.
-    const growth=between(t,start,end);
-    if(growth>0) {
-      const a=UN.project([0,19,0],c),b=UN.project([0,19-40*growth,0],c);
-      s+=UN.thread(a,b,{width:.45,opacity:.65*opacity});
-      const v=(t*.35)%1,pt=UN.project([0,19-40*growth*v,0],c);
-      s+=UN.sphere(pt.x,pt.y,Math.max(.4,.42*pt.s),{opacity:.7*growth*opacity*Math.sin(Math.PI*v)**2,glow:1.2});
-    }
-    return s;
+    const s8=cue(K,'s8',0),you=cue(K,'you',s8+4.3),sees=cue(K,'sees',s8+5.9);
+    const travel=between(t,cue(K,'inner',s8),you-.05);
+    const shrink=between(t,you+.3,sees-.05);
+    const {figure}=UN_V2.towers(t,K),tiny=figure.h/STATURE;
+    // One camera: it holds on the crown while he gathers, then rises to the head.
+    const head=between(t,s8+.85,cue(K,'neurons_number',s8+2.1));
+    const near=STAND.scale+(.96+1.12*travel-STAND.scale)*head;
+    const nearY=STAND.y+(83+68*travel-STAND.y)*head;
+    // Logarithmic zoom: it reads as one steady camera retreat, not a collapse.
+    return {cx:180+(figure.x-180)*shrink,cy:nearY+(figure.feet-SOLES*tiny-nearY)*shrink,
+      f:850,distance:850,yaw:-.28+.045*Math.sin((t-s8)*.38),pitch:.015,
+      scale:near*Math.pow(tiny/near,shrink),shrink};
   }
   function person(t,K,c,opacity=1,morph=null) {
     if(opacity<=0)return '';
     const on=between(t,cue(K,'inner',0)+.05,cue(K,'neurons_number',1));
-    const third=between(t,cue(K,'third',1)-.3,cue(K,'chatgpt',2)+.45);
     let s='',sharp='',soft='';
     const sorted=body.map((v,i)=>{
       const [x,y,z]=v.p,breath=1+.008*Math.sin(t*1.05)*smooth(y/35)*(1-smooth((y-105)/50));
@@ -147,13 +127,14 @@
     for(const {v,i,p} of sorted) {
       const front=clamp((20-p.z)/40);
       const birth=morph?between(t,morph.start,morph.start+.22):1;
-      const op=(.23+.57*front)*(.7+.3*v.h)*(v.head?1-.80*third:1-.65*third)*opacity*birth;
-      const r=(.23+.21*v.h)*Math.pow(c.scale,.58);
+      const op=(.23+.57*front)*(.7+.3*v.h)*opacity*birth;
+      // The floor keeps the tiny figure a figure, not a fading smudge.
+      const r=Math.max(.17,(.23+.21*v.h)*Math.pow(c.scale,.58));
       sharp+=dot(p,r,op);
       if(i%7===0)soft+=dot(p,r*1.3,op*.58);
     }
     s+=`<g fill="#fff" filter="url(#un-soft)">${soft}</g><g fill="#fff">${sharp}</g>`;
-    const pts=brain.map(p=>UN.project(p,c)),op=on*(1-.86*third)*opacity*(morph?smooth((morph.q-.82)/.18):1);
+    const pts=brain.map(p=>UN.project(p,c)),op=on*opacity*(morph?smooth((morph.q-.82)/.18):1);
     s+=`<g opacity="${f(op)}">`;
     const center=UN.project([0,-8,0],c);
     s+=`<ellipse cx="${f(center.x)}" cy="${f(center.y)}" rx="${f(29*c.scale)}" ry="${f(23*c.scale)}" fill="url(#un-halo)" opacity=".85"/>`;
@@ -169,18 +150,32 @@
     s+='</g>';
     return s;
   }
-  function raw(t,K,{zoom=1,labels=true,humanOpacity=1,towerOpacity=1,background=true}={}) {
-    const c=pose(t,K); c.scale*=zoom;c.cy=184+(c.cy-184)*zoom;
-    const start=cue(K,'s8',0)-.05,end=cue(K,'neurons_number',start+1.5);
+  function raw(t,K) {
+    const c=pose(t,K);
+    const start=cue(K,'s8',0)-.05,arrive=cue(K,'neurons_number',start+2.15);
+    // The body is whole before the zoom ends, so he stands on the tower a moment.
+    const end=start+(arrive-start)*.62;
     const q=between(t,start,end);
-    const morph=q<1&&SCENES.un_loss?.geometry?{start,end,q,source:SCENES.un_loss.geometry(t,K)}:null;
-    let s=background?UN.bokeh(t,{count:23,opacity:.6*q,seed:48}):'';
+    const morph=q<1&&typeof SCENES.un_loss?.geometry==='function'?{start,end,q,source:SCENES.un_loss.geometry(t,K)}:null;
+    let s=UN.bokeh(t,{count:23,opacity:.6*q,seed:48});
     if(morph) {
-      if(background)s+=UN.bokeh(t,{seed:36,count:23,opacity:.48*(1-q)});
-      const mesh=1-between(t,start,start+(end-start)*.72);
+      s+=UN.bokeh(t,{seed:36,count:23,opacity:.48*(1-q)});
+      // The surface is gone by «другая»: «вершине» must not fall on its lowest point.
+      const mesh=1-between(t,start,cue(K,'other_net',start+.67));
       s+=`<g opacity="${f(mesh)}">${SCENES.un_loss.body(t,K,{background:false,ball:false})}</g>`;
     }
-    s+=person(t,K,c,humanOpacity,morph);
+    // 'stack' never samples this scene, so the call cannot recurse. Without
+    // towers the shrink stays on black and the incoming scene dissolves over it.
+    const you=cue(K,'you',start+4.3),sees=cue(K,'sees',start+5.9);
+    const towerIn=between(t,you+.5,sees-.1);
+    if(towerIn>0) {
+      const towers=UN_V2.prev('un_towers',t,K,'stack');
+      if(towers!==null)s+=`<g opacity="${f(towerIn)}">${towers}</g>`;
+    }
+    const feet=UN.project([0,SOLES,0],c);
+    if(feet.y<440&&t<cue(K,'you',start+4.3)&&typeof SCENES.un_towers?.crown==='function')
+      s+=SCENES.un_towers.crown(t,K,{x:feet.x,y:feet.y+2,z:c.scale*CROWN_ZOOM,alpha:between(t,start,start+.3)});
+    s+=person(t,K,c,1,morph);
     if(morph) {
       const a=morph.source.bp,b=UN.project([0,-8,0],c),arc=Math.sin(Math.PI*q)**2;
       const x=a.x+(b.x-a.x)*q+23*arc,y=a.y+(b.y-a.y)*q-20*arc;
@@ -188,17 +183,12 @@
       s+=UN.sphere(x,y,r,{opacity:alpha,glow:1.25});
       s+=UN.weight(x,y,r*6.2/5.5,r*1.6/5.5,{opacity:.18*alpha,angle:150+80*q});
     }
-    if(towerOpacity>.001)s+=tower(t,K,c,towerOpacity);
-    if(labels) {
-      const number=between(t,cue(K,'neurons_number',0),cue(K,'neurons',1))*(1-between(t,cue(K,'s9',2)-.05,cue(K,'third',3)));
-      const you=between(t,cue(K,'you',0)-.12,cue(K,'you',0)+.3)*(1-between(t,cue(K,'s9',1),cue(K,'third',2)));
-      s+=UN.mono(180,46,'86 000 000 000',{size:16,anchor:'middle',opacity:number*.94});
-      s+=UN.italic(251,243,'это ты',{size:20,opacity:you*.9});
-      const label=between(t,cue(K,'chatgpt',1)-.1,cue(K,'chatgpt',1)+.4);
-      s+=UN.mono(180,61,'ChatGPT',{size:19,anchor:'middle',opacity:label*.94});
-    }
+    const number=between(t,cue(K,'neurons_number',0),cue(K,'neurons',1))*(1-between(t,you+.1,you+.55));
+    s+=UN.mono(180,46,'≈86 млрд',{size:16,anchor:'middle',opacity:number*.94});
+    const ask=between(t,you,you+.2)*(1-between(t,you+.36,you+.64));
+    s+=UN.italic(285,112,'зачем?',{size:18,anchor:'middle',opacity:ask*.5});
     return s;
   }
-  window.UN_D=Object.freeze({raw,pose,tower,person,between});
   SCENES.un_person=function(u,p={},d,t) {return UN.wrap(raw(t,p.K||{}));};
+  SCENES.un_person.body=(t,K={},mode)=>raw(t,K);
 })();

@@ -1,10 +1,15 @@
-/* s18 — a child grows, balances over a living landscape, becomes a web node.
- * p.s="s18", p.mode="growth", p.K: absolute s18, child_again, growth, adult,
- * survive, changing, environment, s18_end, card/end. No local u/d clock.
- * Neutral engine camera. Slow 3D orbit, then a continuous two-second pullback.
- * The first frame is un_reverse.body at that same absolute t; no cut/reset.
+/* f2 — a child on a living landscape grows up, then the camera leaves the world.
+ * p.s="sf2", p.mode="growth", p.K: absolute f2, child, child_intellect, survive,
+ * changing, f3. No local u/d clock. Neutral engine camera; a slow local orbit,
+ * then one continuous pullback: one camera backs off, rises and turns, so the little
+ * world and un_reverse.web move together, the near world shrinking faster than the
+ * web behind it, and node 0 of the web stays under the world the whole way.
+ * Child and adult are one material with the person of un_person: scattered points of
+ * the same density on head and body. The child has a small head on a real neck.
+ * In: un_super.body at the same absolute t while the landscape dissolves in.
+ * Out: no darkening. The person lands on node 0 of un_reverse.web, which is
+ * already visible at K.f3; un_reverse.body dissolves from this body.
  * All important objects y=16..370; surface fades into the subtitle clearance.
- * From K.card exactly UN.wrap(''): the card belongs only to story.py.
  */
 (() => {
   const mix=(a,b,q)=>a+(b-a)*q,n=x=>x.toFixed(3);
@@ -15,8 +20,10 @@
   const samples=[];
   function ellipsoid(child,adult,rc,ra,count,seed,part='body'){
     for(let i=0;i<count;i++){
-      const z=1-2*(i+.5)/count,a=i*2.3999632297+seed,r=Math.sqrt(1-z*z);
-      const unit=[r*Math.cos(a),z,r*Math.sin(a)];
+      // Scattered, not a spiral lattice: a lattice on a small head reads as dimples.
+      const z=1-2*hash(i*3+seed*7+.5),a=hash(i*5+seed*11+.25)*Math.PI*2,r=Math.sqrt(1-z*z);
+      const shell=.9+.1*hash(i*2+seed*3+.75);
+      const unit=[r*Math.cos(a)*shell,z*shell,r*Math.sin(a)*shell];
       if(part==='head'){
         unit[0]*=1-.20*ease((z-.05)/.85);
         // A shallow jaw and nose preserve the anatomical point-cloud style.
@@ -25,7 +32,8 @@
       samples.push({c:child.map((v,k)=>v+rc[k]*unit[k]),a:adult.map((v,k)=>v+ra[k]*unit[k]),h:hash(i+seed*13),part});
     }
   }
-  ellipsoid([0,-89,0],[0,-166,0],[10.5,13.3,10.5],[11.6,16,12.7],900,31,'head');
+  const HEAD_Y=-91.5;
+  ellipsoid([0,HEAD_Y,0],[0,-166,0],[7.4,9.4,8],[11.6,16,12.7],620,31,'head');
   function tube(child,adult,count,seed,side=1,part='body'){
     const surface=(keys,q,scale,head,a)=>{
       const y=mix(keys[0][0],keys[keys.length-1][0],q);let j=1;
@@ -39,40 +47,50 @@
       samples.push({c:surface(child,q,.48,-89,a),a:surface(adult,q,.62,-166,a),h:hash(i+seed*13),part});
     }
   }
-  tube([[21,0,7,7],[32,0,19,10],[40,0,24,12],[57,0,22,13],[79,0,18,11],[94,0,21,12],[103,0,20,11]],
-    [[17,0,8,8],[29,0,15,10],[37,0,34,13],[46,0,37,15],[61,0,32,17],[84,0,26,15],[104,0,23,13],[121,0,29,15],[137,0,27,15],[147,0,22,13]],1100,51);
+  tube([[10,0,5.8,5.8],[26,0,6.4,6.4]],[[14,0,7.5,8],[24,0,8,8.4]],110,71);
+  tube([[24,0,6.5,6.5],[33,0,19,10],[40,0,24,12],[57,0,22,13],[79,0,18,11],[94,0,21,12],[103,0,20,11]],
+    [[17,0,8,8],[29,0,15,10],[37,0,34,13],[46,0,37,15],[61,0,32,17],[84,0,26,15],[104,0,23,13],[121,0,29,15],[137,0,27,15],[147,0,22,13]],2600,51);
   for(const side of [-1,1]){
     tube([[94,11,10.5,10],[115,12,10,10],[137,12,7,8],[148,12,6,6.5],[168,13,6.7,7],[186,13,4,4.5]],
-      [[132,15,13,13],[153,16,13,13],[179,17,10.4,11],[199,17,7.4,8],[220,17,9,9],[244,18,6,6.5],[263,18,4.7,5]],600,111+side,side,'leg');
+      [[132,15,13,13],[153,16,13,13],[179,17,10.4,11],[199,17,7.4,8],[220,17,9,9],[244,18,6,6.5],[263,18,4.7,5]],1300,111+side,side,'leg');
     tube([[34,22,6,7],[49,28,7,7],[70,30,5.8,6],[90,32,4.5,5],[105,33,3.7,4]],
-      [[36,32,8,9],[48,36,10,10],[72,39,8,8],[90,42,6.4,7],[107,44,7.3,7.5],[131,45,4.5,5]],430,141+side,side,'arm');
-    ellipsoid([side*15.8,-35.7,-.4],[side*27.9,-79.8,-.6],[2.2,3.9,2.1],[3.4,7.4,3.3],90,181+side,'arm');
-    ellipsoid([side*6.2,1.2,-2.4],[side*11.2,-3,-3.7],[2.6,2.2,4.8],[4,3.1,8.7],90,191+side,'leg');
+      [[36,32,8,9],[48,36,10,10],[72,39,8,8],[90,42,6.4,7],[107,44,7.3,7.5],[131,45,4.5,5]],850,141+side,side,'arm');
+    ellipsoid([side*15.8,-35.7,-.4],[side*27.9,-79.8,-.6],[2.2,3.9,2.1],[3.4,7.4,3.3],110,181+side,'arm');
+    ellipsoid([side*6.2,1.2,-2.4],[side*11.2,-3,-3.7],[2.6,2.2,4.8],[4,3.1,8.7],140,191+side,'leg');
   }
+  // The pullback, shared by world and web: the camera turns and rises by this much,
+  // and starts this much closer to the web than where it lands.
+  const TURN=.38,RISE=.3,NEAR=.2;
   function geometry(t,K={}){
-    const start=K.s18??0,child=K.child_again??start+.96,growth=K.growth??start+2;
-    const adult=K.adult??growth+.38,survive=K.survive??start+3.66;
-    const changing=K.changing??start+4.68,environment=K.environment??start+5.34;
-    const card=K.card??start+6.312;
-    const enter=ramp(t,start-.05,child+.36),grown=ramp(t,growth,adult+.83);
-    const pull=ramp(t,survive+.08,environment+.48);
-    // A linear change of world scale under a quintic camera envelope keeps
-    // the changing landscape readable until the last spoken comparison.
-    const scale=mix(1,.018,pull),phase=t-start;
-    const ridgeX=-47+31*Math.sin(phase*.83-.5);
+    const start=K.f2??0,child=K.child??start+1.14,mind=K.child_intellect??child+.42;
+    const survive=K.survive??mind+.96,changing=K.changing??survive+1.62,next=K.f3??changing+1.02;
+    const enter=ramp(t,start-.05,start+.72),seen=ramp(t,child-.62,child-.04);
+    const brain=ramp(t,mind-.05,mind+.62),grown=ramp(t,survive-.05,survive+1.2);
+    const shift=ramp(t,changing-.16,changing+.42);
+    // It lands just as un_reverse starts to dissolve in, so the two webs never double.
+    const pull=ramp(t,changing+.02,next+.08);
+    // Constant-ratio shrink reads as a steady camera move, not a sudden drop.
+    const scale=Math.exp(Math.log(.012)*pull),phase=t-start;
+    const ridgeX=-47+31*Math.sin(phase*.83-.5)+14*shift*Math.sin(phase*2.3);
     const ridgeZ=-10+8*Math.sin(phase*.53);
     // The bright ball is exactly attached to the moving Gaussian ridge. No
     // numerical integration or sampled maxima: random access stays identical.
-    const height=(x,z)=>-10-36*Math.exp(-((x-ridgeX)**2/2000+(z-ridgeZ)**2/3400))
-      +7*(1-Math.cos((x-ridgeX)/45))*Math.sin((z-ridgeZ)/37+phase*.9);
-    const cam={cx:180,cy:284,yaw:-.22+.065*Math.sin(phase*.38),pitch:.43,f:900,distance:900,scale:1};
+    const height=(x,z)=>-10-(36+24*shift)*Math.exp(-((x-ridgeX)**2/2000+(z-ridgeZ)**2/3400))
+      +(7+7*shift)*(1-Math.cos((x-ridgeX)/45))*Math.sin((z-ridgeZ)/37+phase*.9)
+      +15*shift*Math.sin((x-ridgeX)/29)*Math.sin((z-ridgeZ)/31+phase*2.4);
+    const cam0={cx:180,cy:284,yaw:-.22+.065*Math.sin(phase*.38),pitch:.43,f:900,distance:900,scale:1};
+    const cam={...cam0,yaw:cam0.yaw+TURN*pull,pitch:cam0.pitch+RISE*pull};
     const pp=(x,y,z)=>UN.project([x,y,z],cam);
     const ball=pp(ridgeX,height(ridgeX,ridgeZ)-6.5,ridgeZ);
-    return {start,child,growth,adult,survive,changing,environment,card,enter,grown,pull,scale,phase,ridgeX,ridgeZ,height,cam,pp,ball};
+    // The feet ride the surface, so a stronger landscape never leaves them floating.
+    const stand=pp(16,height(16,30),30),rest=UN.project([16,height(16,30),30],cam0);
+    return {stand,rest,start,child,mind,survive,changing,next,enter,seen,brain,grown,shift,pull,scale,phase,ridgeX,ridgeZ,height,cam,pp,ball};
   }
   function human(t,g){
-    const U=UN,{grown,phase}=g;
-    const camera={cx:194,cy:257,yaw:-.20+.04*Math.sin(phase*.4),pitch:0,f:900,distance:900,scale:1};
+    const U=UN,{grown,phase,seen}=g;
+    if(seen<=0)return '';
+    const camera={cx:194+g.stand.x-g.rest.x,cy:g.stand.y-1,yaw:-.20+.04*Math.sin(phase*.4)+TURN*g.pull,
+      pitch:RISE*g.pull,f:900,distance:900,scale:1};
     let dots='',soft='';
     for(let i=0;i<samples.length;i++){
       const v=samples[i],p=v.c.map((x,k)=>mix(x,v.a[k],grown));
@@ -83,22 +101,28 @@
         p[1]+=.8*Math.sin(phase*.85+.4);
       }
       const pt=U.project(p,camera),front=clamp((15-pt.z)/30);
-      const op=(.25+.48*front)*(.66+.34*v.h),r=.27+.23*v.h;
+      // The skull thins out as the mind lights up, or the network cannot be seen.
+      const skull=v.part==='head'?1-.66*g.brain:1;
+      const op=(.25+.48*front)*(.66+.34*v.h)*seen*skull,r=.27+.23*v.h;
       const dot=`<circle cx="${n(pt.x)}" cy="${n(pt.y)}" r="${n(r)}" fill="#fff" opacity="${n(op)}"/>`;
       dots+=dot;if(i%8===0)soft+=dot;
     }
     let brain='';
-    const headY=mix(-89,-166,grown),nodes=[];
+    const headY=mix(HEAD_Y,-166,grown),nodes=[];
+    const rx=mix(6,9.6,grown),ry=mix(7.4,13,grown);
     for(let i=0;i<23;i++){
       const a=i*2.399963,z=1-2*(i+.5)/23,r=Math.sqrt(1-z*z);
-      nodes.push(U.project([8*r*Math.cos(a),headY-2+9*z,8*r*Math.sin(a)],camera));
+      nodes.push(U.project([rx*r*Math.cos(a),headY-1+ry*z,rx*r*Math.sin(a)],camera));
     }
-    const h=U.project([0,headY-2,0],camera);
-    brain+=`<ellipse cx="${n(h.x)}" cy="${n(h.y)}" rx="19" ry="17" fill="url(#un-halo)" opacity=".55"/>`;
+    const h=U.project([0,headY-1,0],camera);
+    brain+=`<ellipse cx="${n(h.x)}" cy="${n(h.y)}" rx="${n(mix(19,30,grown))}" ry="${n(mix(20,32,grown))}" fill="url(#un-halo)" opacity="${n(.9*g.brain)}"/>`;
     for(let i=0;i<nodes.length;i++){
-      const a=nodes[i],b=nodes[(i+5)%nodes.length];
-      brain+=U.thread(a,b,{opacity:.18+.14*Math.sin(t*1.5-i*.41)**2,width:.35});
-      brain+=U.sphere(a.x,a.y,.5,{opacity:.6,glow:.65,highlight:false});
+      const a=nodes[i],b=nodes[(i+5)%nodes.length],c=nodes[(i+8)%nodes.length];
+      const lit=ramp(g.brain,.42*hash(i+71),.42*hash(i+71)+.58);
+      const flow=.5+.32*Math.sin(t*1.9-i*.41)**2;
+      brain+=U.thread(a,b,{opacity:lit*flow,width:.42})+U.thread(a,c,{opacity:lit*flow*.62,width:.34});
+      brain+=U.thread(a,b,{opacity:lit*.2,width:1.3,glow:true});
+      brain+=U.sphere(a.x,a.y,.78,{opacity:.95*lit,glow:.9,highlight:false});
     }
     return `<g filter="url(#un-soft)" opacity=".4">${soft}</g>${dots}${brain}`;
   }
@@ -126,27 +150,35 @@
     s+=U.weight(ball.x,ball.y,6*ball.s,1.7*ball.s,{opacity:.19,angle:g.phase*18});
     return s;
   }
-  function body(t,K={}){
+  function body(t,K={},mode){
     const U=UN,g=geometry(t,K);
-    if(t>=g.card)return '';
-    const fade=1-ramp(t,g.environment+.12,g.card);
-    const previous=g.enter<1&&SCENES.un_reverse?.body?SCENES.un_reverse.body(t,K):'';
-    if(g.enter<1e-9&&previous)return previous;
-    const outside=ease((g.pull-.24)/.76);
-    // One continuous dolly: the whole little world shrinks around its centre.
-    const cy=190,ty=mix(0,-10,g.pull);
+    const previous=g.enter<1&&typeof SCENES.un_super?.body==='function'?SCENES.un_super.body(t,K):'';
+    if(g.enter<1e-9)return previous;
+    // The web starts with the dolly, on its own clock: light lost by the shrinking
+    // person is replaced at once, so the pullback never passes through black.
+    const outside=ramp(t,g.changing+.02,g.changing+.68);
+    // One continuous dolly: the whole little world shrinks onto one web node.
+    const home=SCENES.un_reverse?.node?.(t,K,0)??{x:180,y:190};
+    const px=194,py=205,x=mix(px,home.x,g.pull),y=mix(py,home.y,g.pull);
     let local=`<defs><radialGradient id="un-child-shade"><stop stop-color="#000" stop-opacity=".9"/><stop offset=".68" stop-color="#000" stop-opacity=".75"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs><ellipse cx="194" cy="181" rx="61" ry="105" fill="url(#un-child-shade)" opacity="${n(outside)}"/>`+landscape(t,g)+human(t,g);
-    local=`<g transform="translate(180 ${n(cy+ty)}) scale(${n(g.scale)}) translate(-180 -${cy})">${local}</g>`;
-    let s=U.bokeh(t,{seed:48,count:23,opacity:.48})+local;
-    if(SCENES.un_reverse?.web){
-      const network=SCENES.un_reverse.web(t,K,{camera:{cx:180,cy:198,scale:1.1-.12*g.pull},opacity:.7*outside});
-      s=U.bokeh(t,{seed:48,count:23,opacity:.48})+network+local;
+    const gone=ramp(t,g.next-.1,g.next+.4);
+    local=`<g opacity="${n(1-gone)}" transform="translate(${n(x)} ${n(y)}) scale(${g.scale.toFixed(4)}) translate(${-px} ${-py})">${local}</g>`;
+    // The same camera for the web: it comes back from close by, turned the same way,
+    // with its node 0 held under the world. It lands exactly on un_reverse's own camera.
+    let network='';
+    if(outside>0&&typeof SCENES.un_reverse?.web==='function'){
+      const base=SCENES.un_reverse.geometry(t,K),away=1-g.pull;
+      const camera={distance:base.cam.distance*Math.pow(NEAR,away),yaw:base.cam.yaw-TURN*away,pitch:base.cam.pitch-RISE*away};
+      const node=U.project(base.points[0],{...base.cam,...camera,cx:0,cy:0});
+      network=SCENES.un_reverse.web(t,K,{opacity:outside,camera:{...camera,cx:x-node.x,cy:y-node.y}});
     }
-    const node=ramp(t,g.environment,g.environment+.48);
-    s+=U.sphere(180,cy+ty,1.8,{opacity:.85*node,glow:1.1});
-    return `<g opacity="${n(fade)}"><g opacity="${n(1-g.enter)}">${previous}</g><g opacity="${n(g.enter)}">${s}</g></g>`;
+    // The far background still moves a little, or the camera would seem to stand.
+    const far=Math.pow(1.25,1-g.pull);
+    const s=`<g transform="translate(180 320) scale(${far.toFixed(4)}) translate(-180 -320)">${U.bokeh(t,{seed:48,count:23,opacity:.48})}</g>`+network+local;
+    if(g.enter>=1)return s;
+    return `<g opacity="${n(1-g.enter)}">${previous}</g><g opacity="${n(g.enter)}">${s}</g>`;
   }
-  SCENES.un_child=function(u,p={},d,t){return UN.wrap(body(t,p.K||{}));};
+  SCENES.un_child=function(u,p={},d,t){return UN.wrap(body(t,p.K||{},p.mode));};
   SCENES.un_child.body=body;
   SCENES.un_child.geometry=geometry;
 })();

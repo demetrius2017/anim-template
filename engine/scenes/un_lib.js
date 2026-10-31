@@ -24,7 +24,7 @@
       font-style:italic;font-weight:400;font-size:24px;line-height:29px;letter-spacing:0;text-transform:none}
     #root:has(#un-world) #cap .w,#root:has(#un-world) #cap .w.on{color:#fff;text-shadow:0 0 5px #ffffff35;margin:0 2.5px}
     #root:has(#un-world) .part{font-family:UNSerif,serif;font-style:italic;font-weight:400;text-transform:none}
-    #root:has(#un-world) .part .un-sources{font-family:Plex,monospace;font-style:normal;font-weight:500;color:#fff;line-height:1.55;display:inline-block;text-shadow:0 0 2px #ffffff30}
+    #root:has(#un-world) .part .un-sources{font-family:UNSerif,serif;font-style:italic;font-weight:400;font-size:10px;color:#aaa;line-height:1.55;display:inline-block;white-space:nowrap}
     #root:has(#un-world) .part i{font-family:Plex,monospace;font-style:normal;font-size:7px;color:#aaa}
   `;
   document.head.appendChild(style);

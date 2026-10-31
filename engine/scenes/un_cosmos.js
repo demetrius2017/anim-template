@@ -1,9 +1,14 @@
-/* s11 — the last parent network becomes a deep cosmic web, then two spheres.
- * p.s='s11', p.mode='return'; p.K: ABSOLUTE s11, cosmos, beginning,
- * number_return, weight_return, power, s11_end, s12. No state or u/d clocks.
+/* Phrase 11 — the last parent network becomes a deep cosmic web, then two spheres.
+ * p.s='s11', p.mode='return'; p.K: ABSOLUTE s11, cosmos, beginning, number_return,
+ * weight_return, power, atoms_count, s11_end, s12. No state or u/d clocks.
  * Neutral runtime camera {z0:1,z1:1,drift:0,kicks:0}; local 3D dolly.
- * An optional read-only handoff uses the preceding scene during the opening
- * dissolve; otherwise this mesh is self-contained. Final pose: y=80..342.
+ * Entry: SCENES.un_nested.body(t,K,'nested') dissolves in .8 s; without it this
+ * mesh rises from black. «Число» comes with K.number_return and «вес» beside the ring
+ * with K.weight_return, both placed where no web node ever passes them; «вес» then
+ * stays, as in the ball scene. ≈10⁸⁰ holds from K.power to the end of the phrase and
+ * K.atoms_count adds "атомов" under it. Final pose: y=80..342, two balls on a
+ * thread with the ring. SCENES.un_cosmos.body(t,K,mode) is raw SVG, holds that
+ * pose past K.s12 and is what un_towers/universe dissolves from.
  */
 (() => {
   const lerp=(a,b,q)=>a+(b-a)*q,n=v=>v.toFixed(3),ratio=6.5;
@@ -20,8 +25,8 @@
     for(const v of near)if(v.j>i)links.push([i,v.j]);
   }
   const partner=links[0][1];
-  SCENES.un_cosmos=function(u,p,d,t){
-    const U=UN,K=p.K||{},start=K.s11??0;
+  function bodyAt(t,K={},mode){
+    const U=UN,start=K.s11??0;
     const cue=(key,offset)=>K[key]??start+offset;
     const ramp=(a,b)=>U.smooth((t-a)/Math.max(.001,b-a));
     const cosmic=ramp(cue('cosmos',.8),cue('beginning',2.5));
@@ -94,21 +99,23 @@
     s+=U.sphere(a.x,a.y,lerp(.5,9,dolly),{glow:1.1})+
       U.sphere(b.x,b.y,lerp((2.4+1.8*U.hash(partner+51))*openingScale,6,dolly));
     const number=ramp(cue('number_return',3.2),cue('number_return',3.2)+.6)*(1-ramp(cue('power',5.3)-.2,cue('power',5.3)+.3));
-    s+=U.italic(88,230,'Число,',{size:21,opacity:.9*number,glow:true});
-    const power=ramp(cue('power',5.3),cue('power',5.3)+.45)*(1-ramp(cue('s11_end',7.3)-.22,cue('s12',7.6)-.1));
-    s+=U.mono(214,164,'10⁸⁰',{size:25,opacity:.94*power});
-    // Other authors can refine D without making our first frame jump. Reuse
-    // only its content, never its black backing/defs/UN wrapper (one ID set).
-    // Its own camera keeps evaluating absolute t during this short dissolve.
-    const handoff=ramp(start-.05,cue('cosmos',.8)+.28);
-    if(handoff<1&&typeof SCENES.un_nested==='function'){
-      const previous=SCENES.un_nested(0,{s:'s10',mode:'nested',K},d,t);
-      const marker='<g clip-path="url(#un-safe)">',at=previous.indexOf(marker);
-      if(at>=0&&previous.endsWith('</g></g>')){
-        const raw=previous.slice(at+marker.length,-8);
-        s=`<g opacity="${n(1-handoff)}">${raw}</g><g opacity="${n(handoff)}">${s}</g>`;
-      }
+    s+=U.italic(84,170,'Число',{size:24,opacity:.9*number,glow:true});
+    // Same place as in the ball scene: it lands on (134,238), left of the final ring.
+    s+=U.italic(ring.x-lerp(4,36,dolly)-11,ring.y+8,'вес',{size:24,anchor:'end',opacity:.92*weight,glow:true});
+    const power=ramp(cue('power',5.3),cue('power',5.3)+.45);
+    // Plex has wide superscript glyphs: the exponent 80 is set by hand to read as 10⁸⁰.
+    s+=U.mono(197,164,'≈',{size:25,opacity:.94*power})+U.mono(214,164,'10',{size:25,opacity:.94*power})+U.mono(244.5,152,'80',{size:14,opacity:.94*power});
+    const atoms=ramp(cue('atoms_count',7.3),cue('atoms_count',7.3)+.4);
+    s+=U.mono(215,183,'атомов',{size:13,opacity:.9*atoms});
+    // Reuse only the neighbour's raw content: one wrapper and one set of ids.
+    const shot=start-.05,handoff=ramp(shot,shot+.8);
+    if(handoff<1){
+      const previous=UN_V2.prev('un_nested',t,K,'nested');
+      s=previous!==null?`<g opacity="${n(1-handoff)}">${previous}</g><g opacity="${n(handoff)}">${s}</g>`
+        :`<g opacity="${n(handoff)}">${s}</g>`;
     }
-    return U.wrap(s);
-  };
+    return s;
+  }
+  SCENES.un_cosmos=function(u,p={},d,t){return UN.wrap(bodyAt(t,p.K||{},p.mode));};
+  SCENES.un_cosmos.body=bodyAt;
 })();

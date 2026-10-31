@@ -16,3 +16,10 @@ music/*
 
 # private owner inputs (names, links, screenshots)
 eps/*/source/private/
+
+.env
+lab/out/
+
+# рабочие файлы сборки: кадры и звук чужого исходного ролика в репозиторий не идут
+eps/*/join/*
+!eps/*/join/*.py
