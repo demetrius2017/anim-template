@@ -13,8 +13,11 @@ argument-hint: "<тема ролика> [— источник фактов: пу
 - Рабочая копия: `~/Projects/anim-template` (форк https://github.com/demetrius2017/anim-template; `upstream` = aonetimeusername/anim-template).
 - Если папки нет: `git clone https://github.com/demetrius2017/anim-template.git ~/Projects/anim-template`, затем
   `python3.11 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`. Браузер — системный Google Chrome
-  (иначе `python -m playwright install chromium`), нужен ffmpeg. Проверка: `python build.py example`.
-- Рендерить на Mac: на Tesla нет Chrome и node.
+  (иначе `python -m playwright install chromium`), нужен ffmpeg. Проверка: `WORK=$PWD/eps/example .venv/bin/python tts.py && python3 ~/Projects/serial-studio/tools/remote_anim.py example --sheet`.
+- Рендер — только на GPU-станции tesla (правило Дмитрия: все тяжёлые вычисления — только там): `python3 ~/Projects/serial-studio/tools/remote_anim.py <имя> [--sheet | --no-render]`,
+  подробно — раздел «Рендер на GPU-станции» в `CLAUDE.md` движка. На Mac — только озвучка (облако) и файлы; станция не ответила — сказать Дмитрию, на Mac не рендерить.
+  ffmpeg (превью, проверки ниже) — тоже на станции, пути абсолютные (remote_run считает их от корня студии): из корня движка
+  `python3 ~/Projects/serial-studio/tools/remote_run.py --no-gpu --sync $PWD/eps/<имя>/out/<имя>.mp4 --pull $PWD/eps/<имя>/preview.mp4 -- ffmpeg -i $PWD/eps/<имя>/out/<имя>.mp4 … $PWD/eps/<имя>/preview.mp4`.
 - Перед работой прочитать в репозитории `CLAUDE.md`, `docs/FORMAT.md`, `docs/SCENES.md` — это правила движка.
 - Образец готового эпизода: `eps/spy_flow` («Почему вы не обгоните SPY»: PLAN.md, script.json, story.py, сцены `engine/scenes/sf_*.js`, протоколы приёмки REVIEW*.md).
 
@@ -34,9 +37,10 @@ tmux-сессия закрывается вместе с командой — д
    `ru-RU-DmitryNeural` или `ru-RU-SvetlanaNeural`. Длинный материал — серия роликов, а не один длинный.
 3. **Утверждение.** Покажи Дмитрию сценарий и список кадров. Если он уже сказал «делай целиком» — не спрашивай.
 4. **Сборка** (Codex): новые сцены `engine/scenes/<префикс>_*.js`, каждая через `scene_test.py` с просмотром кадров;
-   `python build.py <имя> --no-render` (озвучка, ударения — CLAUDE.md «Озвучка: грабли»); `--sheet` и чек-лист CLAUDE.md;
-   полный рендер `python build.py <имя>` (≈5–15 мин на минуту видео). Правки без смены текста — `--skip-tts`.
-   Пример не должен сломаться: `python build.py example --skip-tts --sheet`.
+   озвучка `WORK=$PWD/eps/<имя> .venv/bin/python tts.py` (ударения — CLAUDE.md «Озвучка: грабли»), раскадровка и звук —
+   `python3 ~/Projects/serial-studio/tools/remote_anim.py <имя> --no-render`; лист `… <имя> --sheet` и чек-лист CLAUDE.md; полный рендер `… <имя>`
+   (на станции ≈1 мин на минуту ролика: 3 мин — 200 с; первая выгрузка ролика ещё минуты, канал Mac→tesla ~0,3 МБ/с). Сцены — `… <имя> -- scene_test.py …`. Правки без смены текста — без новой озвучки.
+   Пример не должен сломаться: `python3 ~/Projects/serial-studio/tools/remote_anim.py example --sheet`.
 5. **Приёмка** (второй, независимый Codex): ffprobe (1080×1920, звук, ≤60 с), кадры каждые 2 с и `qa/sheet.jpg`, все числа против
    `source/`, чек-лист FORMAT.md, финальная плашка (для финансов — «Учебное объяснение, не инвестиционная рекомендация»).
    Первая строка ответа `VIDEO_OK` / `VIDEO_NEEDS_FIXES`; до двух кругов исправлений.
@@ -56,7 +60,7 @@ tmux-сессия закрывается вместе с командой — д
 ## Уроки «Что с Horizon не так?» (16:9, принят Дмитрием 18.10.2026)
 
 - **Формат.** Для объяснений с графиками — горизонтальный кадр: `E.write(..., frame=[640, 360])`, `E.cap_chars = 40`;
-  сцены под 640×360 пишутся отдельно. Мастер для публикации — `RENDER_SCALE=4 ENCODE_CRF=12 python build.py <имя> --skip-tts`
+  сцены под 640×360 пишутся отдельно. Мастер для публикации — `RENDER_SCALE=4 ENCODE_CRF=12 python3 ~/Projects/serial-studio/tools/remote_anim.py <имя>`
   (2560×1440). Подробно — `docs/OPTIONS.md`.
 - **Настоящее вместо схем.** Реальные ряды цен и кривые стратегий, логотипы тикеров (FMP `image-stock/<TICKER>.png`),
   скриншоты продукта — в js-файл ролика (`scripts=[...]`, `window.HZ`, `window.PRELOAD`). Схематичные человечки и шкалы

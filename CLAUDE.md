@@ -32,6 +32,28 @@ eps/<имя>/          ролик: build/script.json (текст), story.py (р�
 4. **Лист кадров:** `python build.py <имя> --skip-tts --sheet` → открой `eps/<имя>/qa/sheet.jpg`, проверь каждый кадр (чек-лист ниже). Нужен лист в конкретные моменты — `python render.py --story eps/<имя>/build/story.json --at 1,2.5,4 --sheet eps/<имя>/qa/at.jpg`.
 5. **Полный рендер:** `python build.py <имя> --skip-tts` → `eps/<имя>/out/<имя>.mp4` и лёгкая копия `<имя>_small.mp4`.
 
+В форке Дмитрия шаги 2–5 (проверка сцен, раскадровка, звук, листы, рендер) идут на GPU-станции — следующий раздел.
+
+## Рендер на GPU-станции (форк Дмитрия)
+
+Правило Дмитрия: всё тяжёлое — раскадровка, сведение, кадры Chromium, сборка mp4, листы кадров — только на станции tesla; на Mac — файлы и облачные вызовы (озвучка). Обёртка живёт в студии, `~/Projects/serial-studio/tools/remote_anim.py`: везёт движок и папку ролика на станцию (out/, qa/, frames/ и кеш голоса не едут), запускает там `build.py <имя> --skip-tts` в контейнере с Playwright 1.64 (Chrome Headless Shell 156 — тот же браузер, что рисует на Mac) и забирает результат на те же места.
+
+```bash
+WORK=$PWD/eps/<имя> .venv/bin/python tts.py                               # озвучка — облако, на Mac, из корня движка
+python3 ~/Projects/serial-studio/tools/remote_anim.py <имя> --no-render   # раскадровка и звук → build/story.json, audio/mix.wav
+python3 ~/Projects/serial-studio/tools/remote_anim.py <имя> --sheet       # лист кадров → eps/<имя>/qa/sheet.jpg
+python3 ~/Projects/serial-studio/tools/remote_anim.py <имя>               # рендер → eps/<имя>/out/<имя>.mp4 и <имя>_small.mp4
+RENDER_SCALE=4 ENCODE_CRF=12 python3 ~/Projects/serial-studio/tools/remote_anim.py <имя>   # мастер 2K
+python3 ~/Projects/serial-studio/tools/remote_anim.py <имя> -- render.py --story eps/<имя>/build/story.json --at 1,2.5,4 --sheet eps/<имя>/qa/at.jpg
+python3 ~/Projects/serial-studio/tools/remote_anim.py <имя> -- scene_test.py <сцена> '<json p>' --dur 6 --at 0,1,2,3 --out eps/<имя>/qa/scene_<сцена>.jpg
+```
+
+- Пути в своей команде — от корня движка; назад едут пути из `--sheet`/`--out` (и `--pull ПУТЬ`). Черновые сцены из `--extra` и `--story` едут сами (и из `qa/`, и из `/tmp`).
+- Озвучка остаётся на Mac: облачный голос, но `tts.py` ещё склеивает фразы ffmpeg-ом и numpy (лёгкий шаг; перенос на станцию — отдельная задача). Личные входы `eps/<имя>/source/private` на станцию не едут.
+- Станция не ответила — код 201 и строка; рендер на Mac сам не запускается (так задумано). Упал рендер — хвосты `qa/render_*.log` станции печатаются в терминал.
+- Лист станции против листа Mac (сверка 03.11 на `example`): 99,1% пикселей совпадают в пределах 1/255; расходятся края букв (FreeType на Linux против CoreText на Mac — контур в 1 пиксель) и мягкие свечения. На глаз не различить. Обновился Playwright в `.venv` — обёртка предупредит: образ пересобрать с той же версией.
+- Шрифты сцен — только из `fonts/` через `@font-face`: системных шрифтов Mac (`'Helvetica Neue'`, `Arial`, `serif`) на станции нет, там подставятся Liberation/DejaVu.
+
 ## Правила для сцен
 
 - `SCENES.имя = function (u, p, d, t) { ... return svg; }` внутри `(() => { ... })();`. `u` — время от начала кадра, `p` — параметры из story.py, `d` — длина кадра, `t` — время ролика. **Все времена в `p` абсолютные** (время ролика), сравнивай их с `t`.
