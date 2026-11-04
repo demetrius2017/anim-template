@@ -58,11 +58,14 @@
     return `<g opacity="${o.opacity??.65}" transform="rotate(${o.angle??0} ${x} ${y})"><ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="none" stroke="#fff" stroke-width=".55"/>
       <ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="none" stroke="#fff" stroke-width="1.3" opacity=".25" filter="url(#un-soft)"/></g>`;
   }
+  // Safe zone of the platforms (story.safe, runtime.js): the scene is drawn smaller, so small labels (< 16) grow by
+  // story.safe.text up to 16 and keep their size on screen. Without story.safe fs(v) is v, nothing changes.
+  const fs = v => {const k=(typeof S!=='undefined'&&S&&S.safe&&S.safe.text)||1;return k===1||v>=16?v:Math.min(16,v*k);};
   function label(x,y,text,o={},italic=false) {
-    return `<text x="${num(x)}" y="${num(y)}" fill="#fff" opacity="${o.opacity??.9}" font-family="${italic?'UNSerif':'Plex'}" font-style="${italic?'italic':'normal'}" font-weight="${italic?400:600}" font-size="${o.size??(italic?20:9)}" text-anchor="${o.anchor??'start'}"${o.glow?' filter="url(#un-text-glow)"':''}>${esc(text)}</text>`;
+    return `<text x="${num(x)}" y="${num(y)}" fill="#fff" opacity="${o.opacity??.9}" font-family="${italic?'UNSerif':'Plex'}" font-style="${italic?'italic':'normal'}" font-weight="${italic?400:600}" font-size="${fs(o.size??(italic?20:9))}" text-anchor="${o.anchor??'start'}"${o.glow?' filter="url(#un-text-glow)"':''}>${esc(text)}</text>`;
   }
   function token(x,y,text,o={}) {
-    const w=o.w??Math.max(32,text.length*6+18),h=o.h??23;
+    const w=o.w??Math.max(32,text.length*6*fs(10)/10+18),h=o.h??23;
     return `<g opacity="${o.opacity??1}"><rect x="${x-w/2}" y="${y-h/2}" width="${w}" height="${h}" rx="${h/2}" fill="#000" stroke="#fff" stroke-width=".9"/>
       ${label(x,y+3.5,text,{size:o.size??10,anchor:'middle'})}
       ${o.cursor?thread([x,y-5],[x,y+5],{width:.8,opacity:1}):''}</g>`;
@@ -117,6 +120,6 @@
   </defs>`;
   function wrap(svg) {return `<g id="un-world" mask="url(#un-bottom-mask)"><rect x="-400" y="-640" width="1160" height="1920" fill="#000"/>${defs}<g clip-path="url(#un-safe)">${svg}</g></g>`;}
   function at(K,key,t,duration=.7,fallback=0) {return smooth((t-(K?.[key]??fallback))/Math.max(.001,duration));}
-  window.UN=Object.freeze({project,polyline,thread,sphere,weight,block,surface,token,bokeh,wrap,at,smooth,hash:hashN,
+  window.UN=Object.freeze({fs,project,polyline,thread,sphere,weight,block,surface,token,bokeh,wrap,at,smooth,hash:hashN,
     mono:(x,y,s,o)=>label(x,y,s,o),italic:(x,y,s,o)=>label(x,y,s,o,true)});
 })();

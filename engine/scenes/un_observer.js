@@ -16,6 +16,8 @@
  * непрерывная траектория, шва между ними нет. Выход владеет un_tokens: он вызывает
  * body(t,K,'god') и собирает свой ряд из пилюль .row. Без id в SVG: вся глубина на прозрачности.
  * Важное y=16..370, субтитры y=410..480, цветов нет. Символов религии нет.
+ * Необязательные K.tok_text[6], K.tok_val[5], K.tok_wt[5] — свои слова пилюль, числа под ними и толщины пяти главных
+ * дуг (часть 2, 04.11: не токены исходного ролика); без них кадр прежний.
  */
 (() => {
   const PI=Math.PI,TAU=PI*2;
@@ -1244,7 +1246,7 @@
       const born=primary?ramp(t,hit(i),hit(i)+.3):1,rev=primary?born:ramp(t,start,start+.26);
       if(rev<=0)return;
       const a=[TOK[A[0]].x,y0-h/2],b=[TOK[A[1]].x,y0-h/2],c=Math.abs(b[0]-a[0]),f=primary?focus(i):0;
-      const wd=(primary?mix(1.1,.5+4.4*WT[i],born):A[2]*.5)*(1+.1*all)+.5*f;
+      const wd=(primary?mix(1.1,.5+4.4*(K.tok_wt?.[i]??WT[i]),born):A[2]*.5)*(1+.1*all)+.5*f;
       const op=primary?mix(.82,.96,born):.5+.16*all;
       const pts=arcPts(b,a,[0,-1],arcH(c),rev);
       s+=lines([pts],wd,cl(op+.04*f))+lines([pts],wd+2.2,.14+.2*f,true);
@@ -1257,10 +1259,10 @@
       const r=rise(i),isSel=i===5,g=Math.round(mix(255,176,sel));
       const fill=isSel||sel<=0?'#fff':`rgb(${g},${g},${g})`,pulse=isSel?1+.05*sel*Math.sin(t*3.4):1;
       if(isSel&&sel>0)s+=`<circle cx="${tk.x}" cy="${y0}" r="${f2(30*sel)}" fill="url(#un-halo)" opacity="${f3(sel*.9)}"/>`;
-      s+=pill(tk.x,y0+(1-r)*16,tk.pw*pulse,h*pulse,tk.w,{fill,opacity:r});
+      s+=pill(tk.x,y0+(1-r)*16,tk.pw*pulse,h*pulse,K.tok_text?.[i]??tk.w,{fill,opacity:r});
       if(i<5){
         const v=ramp(t,hit(i)+.1,hit(i)+.34);
-        if(v>0)s+=U.mono(tk.x,y0+h/2+15,VAL[i],{size:9.4,anchor:'middle',opacity:v*(.74+.26*Math.max(focus(i),all))});
+        if(v>0)s+=U.mono(tk.x,y0+h/2+15,K.tok_val?.[i]??VAL[i],{size:9.4,anchor:'middle',opacity:v*(.74+.26*Math.max(focus(i),all))});
       }
     });
     return s;
@@ -1347,7 +1349,7 @@
     if(pillA>0)TOK.forEach((tk,i)=>{
       const b=o.row?.[i]??{x:tk.x,y:ROWY+13,w:tk.pw,h:26};
       s+=`<rect x="${f2(b.x-b.w/2)}" y="${f2(b.y-b.h/2)}" width="${f2(b.w)}" height="${f2(b.h)}" rx="${f2(b.h/2)}" fill="#000" stroke="#fff" stroke-width=".7" opacity="${f3(.42*pillA)}"/>`;
-      if(textA>.002)s+=`<text x="${f2(b.x)}" y="${f2(b.y+4.7)}" fill="#fff" font-family="Plex" font-weight="600" font-size="13" text-anchor="middle" opacity="${f3(.3*textA)}">${tk.w}</text>`;
+      if(textA>.002)s+=`<text x="${f2(b.x)}" y="${f2(b.y+4.7)}" fill="#fff" font-family="Plex" font-weight="600" font-size="13" text-anchor="middle" opacity="${f3(.3*textA)}">${K.tok_text?.[i]??tk.w}</text>`;
     });
     // Огромная дуга над всей башней: идёт от левой ноги к правой.
     const hg=ramp(t,K.g_third+.3,K.g_third+1.75);

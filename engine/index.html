@@ -36,6 +36,9 @@ html,body{margin:0;width:360px;height:640px;overflow:hidden;background:#000;}
 .chip.red{background:#cf2b2b;} .chip.green{background:#1f9d57;} .chip.dark{background:#1b2638;border:1px solid #3a4a66;} .chip.white{background:#e9edf3;color:#141a24;}
 .mono{position:absolute;font-family:"Plex";font-weight:600;font-size:8.5px;letter-spacing:1.2px;color:#8f9bb0;white-space:nowrap;text-transform:uppercase;}
 .part{position:absolute;left:0;right:0;text-align:center;font-family:"Mont";font-weight:900;color:#fff;text-transform:uppercase;}
+/* безопасная зона площадок (story.safe): ужатая сцена гаснет к краям мягко, карточки — в зоне по ширине */
+#root.safe #stage{transform-origin:0 0;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 2%,#000 98%,transparent 100%),linear-gradient(180deg,transparent 0,#000 5%,#000 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(90deg,transparent 0,#000 2%,#000 98%,transparent 100%),linear-gradient(180deg,transparent 0,#000 5%,#000 100%);mask-composite:intersect;}
+#root.safe .part{left:var(--safe-l);right:var(--safe-r);}
 .part i{display:block;font-family:"Hand";font-style:normal;font-weight:700;font-size:20px;color:#c9ced8;text-transform:none;}
 </style></head>
 <body>

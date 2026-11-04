@@ -9,6 +9,25 @@ NUMS = [  # слова → цифры в субтитрах (диктор чит
     (["сорок", "семь"], "47"), (["восемь", "секунд"], "8 секунд")]
 
 
+def safe_zone(frame=(360, 640), zone=(.08, .14, .82, .62), cap_x=(.08, .80), cap_lines=2, line_h=29,
+              scene_scale=.72, scene_top=24, text=None):
+    """Безопасная зона площадок для кадра 9:16 (решение владельца 04.11: Instagram Reels и YouTube Shorts сразу).
+    Текст — субтитры, надписи, источники, карточки — только внутри zone (доли кадра: слева 8 %, сверху 14 %,
+    справа 82 %, снизу 62 %): сверху интерфейс, справа кнопки «лайк/коммент/поделиться», снизу ник канала, подпись
+    и звук (≈35 % высоты). Субтитры — в полосе cap_x ширины, низ блока из cap_lines строк — на нижней границе зоны.
+    Сцена ужимается в scene_scale и встаёт так, что её y=scene_top приходится на верх зоны, а центр — на центр
+    зоны по ширине (по умолчанию .72 и 24: важное сцены y≤370, GROUND, кончается над субтитрами): x' = s·x + x, y' = s·y + y (runtime.js, #stage). text — множитель мелких надписей сцен, которые
+    его читают (UN.fs в un_lib.js); по умолчанию min(1/scene_scale, 1.15): сильнее — подписи у края кадра
+    (ТРАНСФОРМЕРЫ в un_towers) вылезают за край сцены.
+    Результат — story['safe'] через E.write(safe=...); без него кадр не меняется."""
+    W, H = frame
+    s = scene_scale
+    return {"preset": "reels_shorts", "zone": list(zone),
+            "cap": {"top": round(zone[3] * H - cap_lines * line_h - 3, 2), "x0": round(cap_x[0] * W, 2), "x1": round(cap_x[1] * W, 2)},
+            "scene": {"s": s, "x": round((zone[0] + zone[2]) / 2 * W - s * W / 2, 2), "y": round(zone[1] * H - s * scene_top, 2)},
+            "text": round(text or min(1 / s, 1.15), 4)}
+
+
 def bare(w):
     return re.sub(r"[^\wё]", "", w.lower())
 
@@ -124,11 +143,12 @@ class Ep:
                   **({"br": 1} if w.get("br") else {})} for w in W]
         return words, pages
 
-    def write(self, fades=(), kicks=(), cap_off=None, marks=None, look=None, frame=None, scripts=None):
+    def write(self, fades=(), kicks=(), cap_off=None, marks=None, look=None, frame=None, scripts=None, safe=None):
         """fades — затемнения [{t0,t1,a0,a1}], kicks — толчки камеры (удары), cap_off — где спрятать субтитры,
         marks — отметки времени для mix.py (M.MK), look — цвет: night | mono | muted | cctv | riso.
         frame — [ширина, высота] сцены в точках (по умолчанию [360, 640] → 1080×1920; [640, 360] → 1920×1080),
         scripts — js-файлы ролика (данные, картинки), пути от корня репозитория; render.py подключает их после сцен.
+        safe — безопасная зона площадок (safe_zone()): субтитры и сцена в ней; плашки ставит сам story.py.
         первый кадр НЕ затемняем: в ленте он решает, листают ли дальше"""
         for i, s in enumerate(self.shots):
             s["t1"] = self.shots[i + 1]["t0"] if i + 1 < len(self.shots) else self.dur
@@ -139,6 +159,8 @@ class Ep:
             story["frame"] = list(frame)
         if scripts:
             story["scripts"] = list(scripts)
+        if safe:
+            story["safe"] = dict(safe)
         if look:
             story["look"] = look   # цветовое решение выпуска (engine/runtime.js LOOKS)
         story['token_map'] = {w['token_id']: {'t0': w['t0'], 't1': w['t1'], 'focus': w.get('focus'),

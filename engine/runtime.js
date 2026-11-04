@@ -13,7 +13,23 @@ async function init(story) {
     $('grain').width = FW; $('grain').height = FH;
     if (FW > FH) $('root').classList.add('land');
   }
+  if (S.safe) applySafe(S.safe);
   await Promise.all((window.PRELOAD || []).map(u => { const im = new Image(); im.src = u; return im.decode().catch(() => {}); }));
+}
+
+// story.safe — безопасная зона площадок (storylib.safe_zone): zone [x0,y0,x1,y1] — доли кадра для текста, cap — верх и
+// края субтитров (точки кадра), scene {s,x,y} — сцена ужимается в зону (x' = s·x + x), края ужатой сцены мягко гаснут;
+// .part (карточки) встают в зону по ширине. Без story.safe кадр рисуется как раньше.
+function applySafe(z) {
+  const r = $('root'), [x0, , x1] = z.zone;
+  r.classList.add('safe');
+  r.style.setProperty('--safe-l', (FW * x0).toFixed(2) + 'px');
+  r.style.setProperty('--safe-r', (FW * (1 - x1)).toFixed(2) + 'px');
+  if (z.cap) {
+    const cap = $('cap');
+    cap.style.top = z.cap.top + 'px'; cap.style.left = z.cap.x0 + 'px'; cap.style.right = (FW - z.cap.x1) + 'px';
+  }
+  if (z.scene && z.scene.s) $('stage').style.transform = `translate(${z.scene.x || 0}px,${z.scene.y || 0}px) scale(${z.scene.s})`;
 }
 
 function shotAt(t) {

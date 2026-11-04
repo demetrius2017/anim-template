@@ -73,3 +73,68 @@
 | `sf_market` | sf_market.js | `cost`, `before`, `after`, `control`: один рынок, издержки и управление риском | `detail` |
 
 Проверка всех 18 режимов: `scene_test.py`, t=0/2,5/5 с, события на 2 с, указанные выше камеры; листы — `eps/spy_flow/qa/scenes/`. Все сцены без параметров времени показывают активное состояние; времена из рабочего `story.py` передаются напрямую.
+
+## Черновая раскадровка Movie Studio — `engine/scenes/ss_*.js`
+
+| сцена | файл | назначение | параметры |
+|---|---|---|---|
+| `ss_storyboard` | ss_storyboard.js | 34 опорных состояния `spy_studio/script_v10`, светлый стиль `flat_science`; не готовый аниматик | `n` (1–34), абсолютные `start`, `phase_times`, `title`, `period`, `conditions`, `phase_labels` |
+
+Камера для раскадровки: `{z0:1,z1:1,x0:0,x1:0,y0:0,y1:0,drift:0,kicks:0}`.
+Шрифты Inter/Manrope и OFL локально в `eps/spy_studio/storyboard/fonts/`.
+Виньетка и зерно скрыты только при наличии `#ss-scene`; старые сцены не меняются.
+Сборка ключевых кадров через `scene_test.py`: `.venv/bin/python eps/spy_studio/storyboard/build_storyboard.py`.
+Ключевые времена и привязки к авторским событиям — `storyboard/keyframes.r001.json`; секунды плановые, не измеренный TTS.
+Сцена реализует опорные состояния и смену метрик 19–20; полное движение объектов и синхронизация речи требуют отдельного поручения.
+
+## «Сеть внутри сети» — `engine/scenes/un_*.js`
+
+Общий API и изолированный чёрно-белый стиль — `un_lib.js` (`window.UN`).
+Холст 360×640 → 1080×1920; смысловые объекты y<370, курсивные субтитры y=410.
+Сцены получают `p.s`, `p.mode`, `p.K`: абсолютные времена озвучки из
+`eps/universe_net/build/cues.json`. Камера движется внутри сцен, общая камера нейтральна.
+Все файлы автоматически подключает `render.py` через `engine/scenes/*.js`.
+
+| сцена | режимы | состояние шага 1 |
+|---|---|---|
+| `un_style` | 0: два шара; 1: сеть; 2: сигмоида; 3: блок; 4: ошибка; 5: башня/токены | проверочный лист общего стиля |
+| `un_atom` | number, atom, bond | пустая заглушка для s1–s3 |
+| `un_energy` | activation | пустая заглушка s4 |
+| `un_molecule` | layer | пустая заглушка s5 |
+| `un_tower` | levels | пустая заглушка s6 |
+| `un_loss` | learning | пустая заглушка s7 |
+| `un_person` | brain, chatgpt | пустая заглушка s8–s9 |
+| `un_nested` | nested | пустая заглушка s10 |
+| `un_cosmos` | return | пустая заглушка s11 |
+| `un_tokens` | sequence, final | пустая заглушка s12–s13 |
+
+Проверка: `python scene_test.py un_style '{}' --dur 18 --at 0,3,6,9,12,15
+--cam '{"z0":1,"z1":1,"drift":0,"kicks":0}' --out eps/universe_net/qa/un_style.jpg`.
+Ограничения и маршрут камер — `eps/universe_net/PLAN.md`. Заглушки не являются готовыми сценами.
+
+### Финал «Сеть внутри сети» — основа F1
+
+| сцена | режимы | состояние F1 | ключевые K |
+|---|---|---|---|
+| `un_super` | reveal, question | пустая заглушка s14–s15 | super_you, superhuman, why, answer, simple |
+| `un_aware` | awareness | пустая заглушка s16 | sprout, superintelligence, realize, self, child, awareness |
+| `un_reverse` | reverse | пустая заглушка s17 | destruction, reverse, prolong, life |
+| `un_child` | growth | пустая заглушка s18 | child_again, growth, adult, survive, changing, environment, card |
+
+Времена абсолютные, из Brian; полный список слов в `K.words`. Новая карточка
+после s18. Старые s1–s13 получают прежний `K.card` только для сохранения их
+анимации; глобальные marks и новые сцены получают новое время карточки.
+Контракт F1 и исходный кадр пилюли — в `eps/universe_net/PLAN.md`.
+
+### Две части Shorts (04.11) — `un_gpt.js`, `un_parts.js`
+
+| сцена | режимы | что | ключевые K |
+|---|---|---|---|
+| `un_gpt` | hook, brick, sum, neuron, net, learn, tokens, attention, blocks, train, billions — одна траектория t | хук hn и блок «как собрать ChatGPT с нуля» c1–c11 части 1: две башни → кирпич «число × вес» → Σ → нейрон с порогом → слой → нейросеть → случайные веса → долина ошибки → токены «Кот сел на окно.» → внимание → блок трансформера → этажи → интернет, люди → ChatGPT → миллиарды кирпичей; выход наплывом в `un_towers`/intro | hn_*, c1…c11_*, gpt_out (см. D в шапке) |
+| `un_x12` | universe | фраза 12 части 1: `un_towers`/universe + сеть в правой башне, волны обучения, подъезд | u_deep, u_net, u_learn, u_if, u_view, intellect |
+| `un_q` | question | фраза q части 1: наплыв в паутину `un_hook`, гаснет, «зачем?», точка | q, h_fades, h_why, h_you |
+| `un_o1` | hook, vanchurin, attention | фраза o1 части 2: хук `un_hook` → паутина `un_cosmos` → ряд токенов с дугами `un_gpt.attention` | h_*, o_phys, o_deep, o_trick, o_each, o_others, o_decide |
+| `un_g1` | decode | g1 части 2: наплыв из o1 в `un_observer`/decode | g1, g_where, g_gpt, g_token, g_others |
+
+Необязательные `K.pill_text` (`un_protein`) и `K.tok_text`/`K.tok_val`/`K.tok_wt` (`un_observer`) — свои слова пилюль вместо
+токенов исходного ролика; без них кадр прежний. Безопасная зона площадок — `story.safe` (CLAUDE.md, «Раскадровка»).

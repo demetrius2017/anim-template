@@ -122,7 +122,15 @@ def disjoint(items, where):
 
 
 def validate_story(story, scenes=None, work=None):
-    fields(story, 'duration shots overlays words pages fades kicks capFrom0 capOff look token_map pauses frame scripts', 'story')
+    fields(story, 'duration shots overlays words pages fades kicks capFrom0 capOff look token_map pauses frame scripts safe', 'story')
+    if 'safe' in story:
+        z = story['safe']
+        fields(z, 'preset zone cap scene text', 'safe')
+        zone = z.get('zone')
+        if not (isinstance(zone, list) and len(zone) == 4 and 0 <= zone[0] < zone[2] <= 1 and 0 <= zone[1] < zone[3] <= 1):
+            raise ContractError('safe.zone: нужен [x0, y0, x1, y1] — доли кадра')
+        fields(z.get('cap', {}), 'top x0 x1', 'safe.cap')
+        fields(z.get('scene', {}), 's x y', 'safe.scene')
     if 'frame' in story and not (isinstance(story['frame'], list) and len(story['frame']) == 2 and all(isinstance(v, (int, float)) and v > 0 for v in story['frame'])):
         raise ContractError('frame: нужен [ширина, высота] > 0')
     duration = number(story.get('duration'), 'duration', 0)

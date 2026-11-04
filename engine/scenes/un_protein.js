@@ -16,6 +16,7 @@
  * SCENES.un_protein.owns(t,K) — идёт ли отъезд, который рисует эта сцена.
  * SCENES.un_protein.flight(K) — времена наезда и отъезда, по ним un_towers гасит подписи.
  * Детерминизм: только t и K. Если башни нет, сцена идёт из чёрного.
+ * Необязательный K.pill_text[6] — свои слова пилюль (часть 1, 04.11: токены своего блока c7); без него кадр прежний.
  */
 (() => {
   const N=15,ANCH=[0,3,6,8,11,14],APOS=[0,.246,.509,.70,.853,1];
@@ -109,7 +110,7 @@
       const d=arcD(xs[u],xs[v],top,PILL.span),width=w*.72+(i===0?flash:0);
       s+=`<path d="${d}" pathLength="1" stroke-dasharray="${n(p)} 1" fill="none" stroke="#fff" stroke-width="${n(width)}" stroke-linecap="round" opacity=".92"/>`;
     });
-    PILL.text.forEach((text,i)=>{s+=U.token(xs[i],PILL.y,text,{w:Math.max(13,text.length*5.65+9),h:15.6,size:9.4,opacity:1});});
+    (K.pill_text||PILL.text).forEach((text,i)=>{s+=U.token(xs[i],PILL.y,text,{w:Math.max(13,text.length*5.65+9),h:15.6,size:9.4,opacity:1});});
     return `<g opacity="${n(a)}">${s}</g>`;
   }
   // Задний план: камера внутри прозрачного блока.
