@@ -18,10 +18,13 @@ def run(times, outdir, story, start_index=0, clean=True, episode_root=None):
         for f in outdir.glob("f*.png"):
             f.unlink()
     with sync_playwright() as p:
+        # Chromium из `python -m playwright install chromium` не трогает Google Chrome пользователя;
+        # RENDER_BROWSER=chrome — рендер установленным Google Chrome, как раньше
+        order = [{"channel": "chrome"}, {}] if os.environ.get("RENDER_BROWSER") == "chrome" else [{}, {"channel": "chrome"}]
         try:
-            b = p.chromium.launch(channel="chrome")      # установленный Google Chrome
+            b = p.chromium.launch(**order[0])
         except Exception:
-            b = p.chromium.launch()                      # или Chromium из `python -m playwright install chromium`
+            b = p.chromium.launch(**order[1])
         fw, fh = story.get("frame", [360, 640])
         scale = float(os.environ.get("RENDER_SCALE", 3))   # 3: 640×360 -> 1920×1080; 4: -> 2560×1440 (2K)
         pg = b.new_page(viewport={"width": fw, "height": fh}, device_scale_factor=scale)

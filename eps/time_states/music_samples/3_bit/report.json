@@ -1,0 +1,74 @@
+{
+ "music": {
+  "file": "sample_music.m4a",
+  "lufs_i": -16.1,
+  "true_peak_dbtp": -1.5,
+  "gain_db": 4.7,
+  "limiter_db": -2.0,
+  "duration_s": 40.0,
+  "plan": {
+   "plucks+pad": 0,
+   "groove_half": 2.4,
+   "bass+groove": 4.8,
+   "drop_out": [
+    16.75,
+    19.2
+   ],
+   "awe": 24.0,
+   "final_chord": 36.0
+  }
+ },
+ "with_voice": {
+  "file": "sample_with_voice.m4a",
+  "lufs_i": -14.2,
+  "true_peak_dbtp": -1.5,
+  "gain_db": 9.1,
+  "limiter_db": -2.0,
+  "duration_s": 47.46,
+  "plan": {
+   "hook_break": [
+    33.15,
+    37.14
+   ],
+   "awe": [
+    6.82
+   ],
+   "final_chord": 44.66
+  },
+  "voice_phrases": [
+   "h",
+   "h2",
+   "h3",
+   "h3_2",
+   "h4",
+   "h4_2",
+   "t1",
+   "t1_2"
+  ],
+  "clip_length_mismatch": [],
+  "music_under_speech_db": -11.0,
+  "music_in_pauses_db": -6.4,
+  "speech_band_margin_db": 19.2
+ },
+ "compare": {
+  "bit_bed_1_4khz_share": 0.016,
+  "bit_bed_bands": {
+   "30-120": 0.314,
+   "120-300": 0.219,
+   "300-1000": 0.426,
+   "1000-4000": 0.016,
+   "4000-8000": 0.014,
+   "8000-16000": 0.01
+  },
+  "piano_bed_1_4khz_share": 0.046,
+  "piano_bed_bands": {
+   "30-120": 0.121,
+   "120-300": 0.614,
+   "300-1000": 0.219,
+   "1000-4000": 0.046,
+   "4000-8000": 0.0,
+   "8000-16000": 0.0
+  },
+  "piano_speech_band_margin_db": 14.4
+ }
+}

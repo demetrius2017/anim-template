@@ -1,0 +1,119 @@
+{
+ "music_sample": {
+  "file": "sample_music.m4a",
+  "integrated_lufs": -16.1,
+  "true_peak_dbtp": -4.5,
+  "gain_db": 2.09,
+  "layers_LU_vs_total": {
+   "marimba": -0.3,
+   "pizz": -3.3,
+   "bass_kick": -4.2,
+   "pad": -9.2,
+   "air": -32.7,
+   "shaker": -15.6
+  },
+  "attacks_per_s": {
+   "tick": 1.07,
+   "tock": 0.93,
+   "bass": 1.02,
+   "shaker": 6.95,
+   "answer": 0.85
+  },
+  "plan": {
+   "bar_s": 2.3077,
+   "bass_pad_in": 4.62,
+   "awe": 18.46,
+   "final": 36.92
+  }
+ },
+ "voice_sample": {
+  "file": "sample_with_voice.m4a",
+  "integrated_lufs": -14.1,
+  "true_peak_dbtp": -4.0,
+  "gain_db": 10.19,
+  "length_s": 44.96,
+  "phrases": [
+   {
+    "id": "h",
+    "file": "vo_00.mp3",
+    "t0": 0.05,
+    "len_ok": true
+   },
+   {
+    "id": "h2",
+    "file": "vo_01.mp3",
+    "t0": 2.8,
+    "len_ok": true
+   },
+   {
+    "id": "h3",
+    "file": "vo_02.mp3",
+    "t0": 4.9,
+    "len_ok": true
+   },
+   {
+    "id": "h3_2",
+    "file": "vo_03.mp3",
+    "t0": 9.542,
+    "len_ok": true
+   },
+   {
+    "id": "h4",
+    "file": "vo_04.mp3",
+    "t0": 15.142,
+    "len_ok": true
+   },
+   {
+    "id": "h4_2",
+    "file": "vo_05.mp3",
+    "t0": 23.793,
+    "len_ok": true
+   },
+   {
+    "id": "t1",
+    "file": "vo_06.mp3",
+    "t0": 34.103,
+    "len_ok": true
+   },
+   {
+    "id": "t1_2",
+    "file": "vo_07.mp3",
+    "t0": 37.444,
+    "len_ok": true
+   }
+  ],
+  "token_mismatch": [],
+  "music_under_speech_db": -11.0,
+  "music_in_pauses_db": -10.2,
+  "duck_depth": 0.45,
+  "break": [
+   33.15,
+   37.14
+  ],
+  "awe": 6.82
+ },
+ "compare_full_40s": {
+  "old_Am_84bpm": {
+   "bands": {
+    "0-250Hz_%": 59.4,
+    "250-1000Hz_%": 39.5,
+    "1000-4000Hz_%": 1.0,
+    "4000-24000Hz_%": 0.0
+   }
+  },
+  "new_tiktak_D_104bpm": {
+   "bands": {
+    "0-250Hz_%": 35.6,
+    "250-1000Hz_%": 63.4,
+    "1000-4000Hz_%": 0.4,
+    "4000-24000Hz_%": 0.7
+   }
+  },
+  "voice_bands": {
+   "0-250Hz_%": 41.2,
+   "250-1000Hz_%": 40.9,
+   "1000-4000Hz_%": 11.9,
+   "4000-24000Hz_%": 6.0
+  }
+ }
+}
