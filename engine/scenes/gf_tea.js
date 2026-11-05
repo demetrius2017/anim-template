@@ -70,14 +70,15 @@
   }
 
   /* ---------------- огонь порядка с лучами (общий с gf_body: рифма первого кадра и «Ответ… к богам») ---------------- */
-  function fire(x, y, r, t, op = 1, boost = 0) {
+  function fire(x, y, r, t, op = 1, boost = 0, ymin = -1e9) {
     if (op <= .003) return '';
     const n = 12, rot = t * .12;
     let tri = '';
     for (let k = 0; k < n; k++) {
       const a = rot + k / n * TAU, lg = k % 2 ? .6 : 1, ca = Math.cos(a), sa = Math.sin(a);
-      const L = r * (1.0 + 1.9 * lg) * (1 + .08 * Math.sin(t * 2.3 + k * 1.7)) * (1 + .45 * boost);
       const r0 = r * 1.22, w = r * (.11 + .06 * lg);
+      let L = r * (1.0 + 1.9 * lg) * (1 + .08 * Math.sin(t * 2.3 + k * 1.7)) * (1 + .45 * boost);
+      if (sa < -.05) L = Math.max(r * .5, Math.min(L, (y - ymin) / -sa - r0));
       const b = [x + ca * r0, y + sa * r0], e = [x + ca * (r0 + L), y + sa * (r0 + L)];
       tri += `M${f(b[0] - sa * w)} ${f(b[1] + ca * w)}L${f(e[0])} ${f(e[1])}L${f(b[0] + sa * w)} ${f(b[1] - ca * w)}Z`;
     }
@@ -111,7 +112,10 @@
   /* ---------------- мир a01: круг у костра ---------------- */
   // 7 человек по кругу (углы подобраны: никто никого не закрывает), задний центральный — за костром; HOLDER — передний справа
   // v3: люди крупнее и ярче (рост 96…146), костёр большой — слепой просмотр v1: «костёр на к1–2 не виден»
-  const RING = { cx: 180, cy: 256, rx: 132, ry: 64 }, FIRE = [180, 260], SPARK = [180, 54], SPARK_R = 14, HOLDER = 6;
+  // v22 (слепой просмотр части 1: «первый кадр тёмный и мелкий»): круг чуть площе и уже, весь мир крупнее (PRE ×1,15),
+  // огонь порядка — в кадре на y≈50 (мир 78), лучи не выходят за верх сцены
+  const RING = { cx: 180, cy: 256, rx: 128, ry: 58 }, FIRE = [180, 260], SPARK = [180, 78], SPARK_R = 12, HOLDER = 6;
+  const PRE = { z: 1.15, x: 180, y: 266 };
   const ANG = [270, 235, 305, 170, 10, 120, 60];
   function people() {
     if (cache.people) return cache.people;
@@ -139,13 +143,14 @@
 
   /* ---------------- камера: наезд на чашку на «чашки» (a01), отъезд на «комнате» (a02) ---------------- */
   const CUP0 = { x: 180, y: 212, w: 116 }, CUP1 = { x: 180, y: 252, w: 74 };
+  // v22: с первого кадра мир ×PRE.z вокруг (PRE.x, PRE.y); медленный наезд «начн» — ещё ×1,1 (было ×1,22 от ×1)
   function cam(t, c) {
-    const cw = cupWorld();
-    const zIn = Math.log(1.22) * GF.qq(t, c.nach, c.chash);
+    const cw = cupWorld(), cx0 = PRE.x + (cw.x - PRE.x) * PRE.z, cy0 = PRE.y + (cw.y - PRE.y) * PRE.z;
+    const zIn = Math.log(PRE.z) + Math.log(1.1) * GF.qq(t, c.nach, c.chash);
     const z0 = c.chash - .1, z1 = c.chash + .8;
     const E = GF.ease((t - z0) / (z1 - z0));
     const lz = zIn + (Math.log(CUP0.w / cw.w) - zIn) * E, Z = Math.exp(lz);
-    const tx = GF.lerp(cw.x, CUP0.x, E), ty = GF.lerp(cw.y, CUP0.y, E);
+    const tx = GF.lerp(cx0, CUP0.x, E), ty = GF.lerp(cy0, CUP0.y, E);
     return { Z, lz, E, P: p => [tx + (p[0] - cw.x) * Z, ty + (p[1] - cw.y) * Z] };
   }
   function cupAt(t, c, C) {
@@ -164,8 +169,8 @@
     if (op <= .003) return '';
     const fl = .86 + .14 * Math.sin(t * 9.1) * Math.sin(t * 5.3 + 1), fp = P(FIRE);
     let s = '';
-    if (gop > .003) s += `<ellipse cx="${f(fp[0])}" cy="${f(fp[1] + 6 * Z)}" rx="${f(96 * Z)}" ry="${f(34 * Z)}" fill="url(#gft-glow)" opacity="${f(.9 * fl * gop)}"/>` +
-      `<circle cx="${f(fp[0])}" cy="${f(fp[1] - 26 * Z)}" r="${f(70 * Z)}" fill="url(#gft-glow)" opacity="${f(.75 * fl * gop)}"/>`;
+    if (gop > .003) s += `<ellipse cx="${f(fp[0])}" cy="${f(fp[1] + 6 * Z)}" rx="${f(130 * Z)}" ry="${f(44 * Z)}" fill="url(#gft-glow)" opacity="${f(fl * gop)}"/>` +
+      `<circle cx="${f(fp[0])}" cy="${f(fp[1] - 26 * Z)}" r="${f(84 * Z)}" fill="url(#gft-glow)" opacity="${f(.9 * fl * gop)}"/>`;
     // камни очага
     const st = Array.from({ length: 14 }, (_, i) => { const a = i / 14 * TAU; return P([FIRE[0] + 31 * Math.cos(a), FIRE[1] + 6 + 8 * Math.sin(a)]); });
     s += GF.dots(st, { r: 1.9 * zr, op: .75 * op, t, glow: .3, color: '#f3e2c6' });
@@ -202,7 +207,10 @@
 
   function fireWorld(t, c, C, op) {
     const P = C.P, Z = C.Z, zr = Math.pow(Z, .3);
-    let s = GF.dots(stars().map(P), { r: 1 * zr, op: .7 * op, t: t * .7, glow: .5 });
+    // v22: светлее — тёплый свет костра на весь круг людей
+    const wash = op * (1 - GF.clamp((C.lz - Math.log(1.3)) / Math.log(1.8))), fpw = P(FIRE);
+    let s = wash > .003 ? `<ellipse cx="${f(fpw[0])}" cy="${f(fpw[1] - 30 * Z)}" rx="${f(175 * Z)}" ry="${f(130 * Z)}" fill="url(#gft-glow)" opacity="${f(.5 * wash)}"/>` : '';
+    s += GF.dots(stars().map(P), { r: 1.1 * zr, op: .85 * op, t: t * .7, glow: .6 });
     // огонь порядка и нити к людям
     const rise = GF.qq(t, c.up, c.up + 1.2), sop = op * (1 - GF.qq(t, c.up + .25, c.up + 1.1));
     const sp = P([SPARK[0], SPARK[1] - 160 * rise * rise]);
@@ -222,9 +230,9 @@
       s += th + GF.dots(run, { r: 1.3 * zr, op: Math.min(1, thr * 1.8), t, glow: .9, color: '#fff3dc' });
       if (hot.length) s += GF.dots(hot, { r: 2.3 * zr, op: .95 * hb * thr / .55, t, glow: 1.2, color: '#fff6e4' });
     }
-    s += GF.dots(ringPts().map(P), { r: .9 * zr, op: .45 * op, t, glow: 0, alpha: i => .5 + .5 * H(i + 960) });
+    s += GF.dots(ringPts().map(P), { r: 1 * zr, op: .6 * op, t, glow: .2, alpha: i => .5 + .5 * H(i + 960) });
     const drawPeople = front => L.filter(p => p.front === front).map(p =>
-      GF.dots(GF.jitter(p.pts, t, .35, p.k).map(P), { r: 1.05 * zr, op: .95 * op, t: t + p.k, glow: .55 })).join('');
+      GF.dots(GF.jitter(p.pts, t, .35, p.k).map(P), { r: 1.22 * zr, op: op, t: t + p.k, glow: .8 })).join('');
     s += drawPeople(false);
     // большой костёр; его свечение гаснет с наездом, чтобы не упиралось в край сцены
     const gop = op * (1 - GF.clamp((C.lz - Math.log(1.3)) / Math.log(1.6)));
@@ -237,7 +245,8 @@
       s += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(cw.w * 1.25 * Z)}" fill="none" stroke="#fff3dc" stroke-width="1.6" opacity="${f(.85 * ring)}"/>` +
         `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(cw.w * 1.25 * Z)}" fill="none" stroke="#fff3dc" stroke-width="4" opacity="${f(.35 * ring)}" filter="url(#un-soft)"/>`;
     }
-    if (sop > .003) s += fire(sp[0], sp[1], SPARK_R * Z, t, sop, .8 * pulse(t, c.bogi, .2, .8) + .5 * pulse(t, c.strann + .6, .2, .7));
+    // v22: огонь порядка ярче с первого кадра (лучи длиннее), лучи — не выше края сцены
+    if (sop > .003) s += fire(sp[0], sp[1], SPARK_R * Z, t, sop, .3 * (1 - GF.qq(t, c.up - .3, c.up + .3)) + .8 * pulse(t, c.bogi, .2, .8) + .5 * pulse(t, c.strann + .6, .2, .7), 3);
     return s;
   }
 

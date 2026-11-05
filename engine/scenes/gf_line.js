@@ -15,11 +15,19 @@
  * Нет слова в K.words — доля фразы (черновые доли DEF только для scene_test без K).
  *
  * Часть 1 (вход наплывом 0,5 с из gf_crowd/order — его делает GF.scene; соты 6×6 с людьми и огонь над ними — как там):
- *  daily (a10 = a09 от «Но»)  «Но» — соты вырастают на всю ширину (×1,15, центр 210,196), огонь над ними (210,60),
- *               нити от огня к верхнему ряду; «теле» — слева проявляется крупное тело из точек с сотами в груди;
- *               «не» (не собрать) — края сот и тела осыпаются (точки разлетаются далеко и дрожат), к «навсегда» — сильнее;
- *               «собираем» — края собираются, внизу крупный счётчик ДЕНЬ 1 (моно 18–20); «каждый» — ·2, «день» — ·3,
- *               дальше каждые 0,5 с до конца фразы — ·4…: каждый день половина краевых сот осыпается и собирается обратно.
+ *  daily (a10 = a09 от «Но»; текст v21: «Но, как в теле, этот порядок не собрать навсегда: мы собираем его каждый
+ *               день — каждым честным поступком.») «Но» — соты вырастают на всю ширину (×1,15, центр 210,196), огонь
+ *               над ними (210,60), нити от огня к верхнему ряду; «теле» — слева проявляется крупное тело из точек с
+ *               сотами в груди; «порядок» — по сотам от центра бежит волна света; «не» (не собрать) — края сот и тела
+ *               осыпаются (точки разлетаются далеко и дрожат), к «навсегда» — сильнее; «собираем» — края собираются,
+ *               внизу крупный счётчик ДЕНЬ 1 (моно 20–24); «каждый» — ·2, «день» — ·3, «каждым» — ·4 (без этого
+ *               слова — каждые 0,5 с до конца фразы): каждый день половина краевых сот осыпается и собирается обратно;
+ *               «честным» — в каждой соте по очереди тёплая вспышка (честный поступок человека этой соты);
+ *               «поступком» — волна света от центра, огонь вспыхивает с кольцом, тело и счётчик гаснут, соты и огонь
+ *               возвращаются в позу gf_crowd/order: соты 6×6 с людьми ×1 (центр 180,240, r 19,5), огонь (180,88, r 8),
+ *               нити от огня к верхнему ряду. Эта поза — шов с gf_law/voltaire (c10, вход наплывом).
+ *               v21: в части 1 после a10 фраз a11/a12 нет (дальше c10, c11 — gf_law), поэтому past/flip не наступают
+ *               (cues1: их фразы — за пределами ролика); режимы past/flip остаются для части 1 со старым текстом.
  *  past (a11)   «А» — счётчик и тело уходят, огонь улетает вверх за кадр, соты отходят влево (×0,95, центр 150,192);
  *               «откуда» — справа от сот крупный «?» (моно 80); «порядок» (v15: «А откуда взялся сам порядок?») — соты
  *               вспыхивают, под ними печатается ПОРЯДОК (моно 18); «религии» — «?» гаснет, соты сжимаются (×0,62) в центр
@@ -51,7 +59,9 @@
  *               «идее» — ладони гаснут, огонь и подпись тише; «конце» — контур ярче, в нём пустые гнёзда, волна;
  *               «собирают» — три человека с сотами над головой идут к контуру, передний ставит соту в центр контура,
  *               на «Его» — средний, на «люди» — задний (каждый раз волна). Поза держится — из неё наплывает gf_omega/tree.
- * Слова-основы GF.w (сверены со словами cues.json 05.11, текст v15): a10 — теле, не, навсегда, собираем, каждый, день;
+ * Слова-основы GF.w (a10 сверены с eps/god_future_p1/build/words.json, текст v21, 05.11; остальные — с cues.json 05.11,
+ *   текст v15): a10 — теле, порядок, не, навсегда, собираем, каждый, день, каждым, честн, поступк (последние четыре — v21,
+ *   нет слова — события нет);
  *   a11 — откуда, взялся, порядок (v15; до переозвучки — доля после «взялся»), религии, дан, бог, начале, сотворил, дал,
  *   будущее, руках; a12 — дальше, взгляд, будущее, наших, руках, не (2-е), конце, сложится, порядка, мы, собираем,
  *   религии, черновик, работы, собирают, второй;
@@ -78,7 +88,7 @@
   const DZ = 1.15, DCX = 210, DCY = 196, DFX = 210, DFY = 60;   // daily: the comb on the whole width, the fire above it
   const QZ = 1, QCX = 150, QCY = 192, QMX = 300, QMY = 230;   // a11: the comb next to a big «?»
   const RZ = .62, RCX = 180, RCY = 178, RFY = 104;              // a11 «религии … дан свыше»: the comb, the fire lands above it
-  const DAYX = 120, DAYY = 340;                                 // the day counter under the comb
+  const DAYX = 92, DAYY = 330;                                  // the day counter under the comb (v22: larger, on a plate)
   const HCX = 250, HCY = 236, HS = 1.9;                         // the palms over the future part of the line
   // draft phrase bounds only for scene_test without K (real proportions of the voice of 05.11)
   const DEF = { a10: [0, 5.28], a11: [5.28, 14.14], a12: [14.69, 28.4], b01: [0.05, 4.06], b02: [4.46, 15.4] };
@@ -102,7 +112,17 @@
 
   function cues1(K) {
     const c = {};
-    [c.s10, c.e10] = span(K, 'a10'); [c.s11, c.e11] = span(K, 'a11'); [c.s12, c.e12] = span(K, 'a12');
+    // текст v21: за a10 в части 1 идёт c10 (gf_law), фраз a11/a12 нет — их события уходят за конец ролика (не наступают),
+    // а не на черновые доли DEF (иначе в daily сразу видна поза конца flip)
+    const solo = K.a10 != null && K.a11 == null && K.a12 == null;
+    const sp = id => solo && id !== 'a10' ? [1e6, 1e6 + 3] : span(K, id);
+    const W = (K2, id, stem, share, n = 0) => {
+      if (hasW(K2, id, stem, n)) return GF.w(K2, id, stem, n);
+      const [a, b] = sp(id);
+      return a + share * (b - a);
+    };
+    const W10 = stem => hasW(K, 'a10', stem, 0) ? GF.w(K, 'a10', stem) : 1e6;   // v21-слова a10: нет слова — нет события
+    [c.s10, c.e10] = sp('a10'); [c.s11, c.e11] = sp('a11'); [c.s12, c.e12] = sp('a12');
     c.tele = W(K, 'a10', 'теле', .18); c.ne10 = W(K, 'a10', 'не', .37); c.nav = W(K, 'a10', 'навсегда', .53);
     c.sob = W(K, 'a10', 'собираем', .71); c.kazh = W(K, 'a10', 'каждый', .83); c.den = W(K, 'a10', 'день', .9);
     c.otk = W(K, 'a11', 'откуда', .02); c.vzl = W(K, 'a11', 'взялся', .06);
@@ -118,8 +138,11 @@
     c.cher = W(K, 'a12', 'черновик', .77); c.rab = W(K, 'a12', 'работы', .81); c.sobt = W(K, 'a12', 'собирают', .89);
     c.vtor = W(K, 'a12', 'второй', .94);
     if (c.kon < c.ne12 + .8) c.kon = c.ne12 + .8;
-    // day ticks: «собираем», «каждый», «день», then every .5 s until the phrase ends (at most 5 days)
+    // v21: «этот порядок» — волна; «каждым» — день 4; «честным» — тёплые вспышки в сотах; «поступком» — назад в позу шва
+    c.por10 = W10('порядок'); c.kazh2 = W10('каждым'); c.chest = W10('честн'); c.post = W10('поступк');
+    // day ticks: «собираем», «каждый», «день», «каждым» (without it — every .5 s until the phrase ends; at most 4 days)
     c.days = [c.sob, c.kazh, c.den];
+    if (c.kazh2 < 1e5) c.days.push(c.kazh2);
     for (let x = c.den + .5; x < c.s11 - .15 && c.days.length < 4; x += .5) c.days.push(x);
     // the fire falls from above onto the comb on «дан (свыше)», then on «Бог — в начале» takes it into the start of the line
     c.bog11 = W(K, 'a11', 'бог', .4); c.land1 = c.dan + .5;
@@ -384,6 +407,8 @@
     let lines = '', P = [], A = [];
     LAT.forEach((cc, i) => {
       const cr = crumble(i, t, c), [x, y] = cc;
+      // «честным (поступком)»: a warm flash in each cell in turn — the deed of its person
+      const dd = pulse(t, c.chest + H(i * 3 + 7) * .55, .1, .65);
       // the person of the cell (as gf_crowd/order): scatters with the cell and comes back
       PPL[i].forEach((p, k) => {
         let px = p[0], py = p[1];
@@ -392,11 +417,13 @@
           px += Math.cos(dir) * dist + 2.6 * cr * Math.sin(t * (1.9 + H(k + i * 3)) + k);
           py += Math.sin(dir) * dist + 2.6 * cr * Math.cos(t * (1.5 + H(k * 5 + i)) + k);
         }
-        P.push([px, py]); A.push(.95 - .5 * cr);
+        P.push([px, py]); A.push(.95 - .5 * cr + .5 * dd);
       });
       // «порядок»: a wave of light from the centre outwards
       const fl = flash * clamp(1.4 - Math.hypot(x - CX, y - CY) / 110);
-      const lit = clamp(clamp(1 - cr) * (.82 + .18 * Math.sin(t * 1.4 + i * .7)) + .5 * fl);
+      if (dd > .003) lines += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(CR * 1.5)}" fill="url(#gf-warm)" opacity="${f(dd)}"/>` +
+        GF.hex(x, y, CR * .96, { op: .9 * dd, w: 3, glow: true, color: '#ffe6bd' });
+      const lit = clamp(clamp(1 - cr) * (.82 + .18 * Math.sin(t * 1.4 + i * .7)) + .5 * fl + .5 * dd);
       lines += GF.hex(x, y, CR * .96, { op: (.3 + .65 * lit) * (1 - .85 * cr), w: 1.25, fill: fl > .05 ? `rgba(255,255,255,${f(.16 * fl)})` : 'none' });
       if (lit > .55 && cr < .3) lines += GF.hex(x, y, CR * .96, { op: (.25 * (lit - .5) + .4 * fl) * (1 - cr), w: 2.6, glow: true });
       for (let k = 0; k < 12; k++) {
@@ -442,22 +469,25 @@
     let s = '';
     // the comb: grows to the whole width after «Но», steps left for the «?» on «А», on «религии» shrinks to the centre
     // above the line (the fire falls onto it on «дан свыше»), on «Бог — в начале» goes with the fire into the start
-    const zq = qq(t, c.s10 + .3, c.s10 + 1.3), aq = qq(t, c.s11 - .05, c.s11 + .7), rq = qq(t, c.rel - .05, c.rel + .8);
+    // «поступком» (v21): back to the pose of gf_crowd/order — the seam with gf_law/voltaire
+    const back = qq(t, c.post - .05, c.post + .85);
+    const zq = qq(t, c.s10 + .3, c.s10 + 1.3) * (1 - back), aq = qq(t, c.s11 - .05, c.s11 + .7), rq = qq(t, c.rel - .05, c.rel + .8);
     const mv = qq(t, c.mv0, c.land);
     let z = lerp(1, DZ, zq), tx = lerp(CX, DCX, zq), ty = lerp(CY, DCY, zq);
     z = lerp(z, QZ, aq); tx = lerp(tx, QCX, aq); ty = lerp(ty, QCY, aq);
     z = lerp(z, RZ, rq); tx = lerp(tx, RCX, rq); ty = lerp(ty, RCY, rq);
     z = lerp(z, .08, mv); tx = lerp(tx, FX, mv); ty = lerp(ty, LY - 6, mv);
     const cop = 1 - qq(mv, .55, 1);
-    if (cop > .003) s += `<g opacity="${f(cop)}">${GF.zoom(comb(t, c, pulse(t, c.por11 - .05, .15, 1.1)), CX, CY, z, tx, ty)}</g>`;
-    // «как и в теле»: the body at the left (gone on «А»)
-    s += body(t, c, q(t, c.tele - .1, .5) * (1 - qq(t, c.s11 - .05, c.s11 + .5)));
+    const flash = Math.max(pulse(t, c.por11 - .05, .15, 1.1), pulse(t, c.por10 - .05, .15, 1.1), pulse(t, c.post, .15, 1.1));
+    if (cop > .003) s += `<g opacity="${f(cop)}">${GF.zoom(comb(t, c, flash), CX, CY, z, tx, ty)}</g>`;
+    // «как в теле»: the body at the left (gone on «А»; v21 — on «поступком»)
+    s += body(t, c, q(t, c.tele - .1, .5) * (1 - qq(t, c.s11 - .05, c.s11 + .5)) * (1 - back));
     // the fire: above the comb (daily) → flies up out of the frame on «А» («откуда?») → falls at once from above along a
     // beam onto the comb on «дан (свыше)» → with the comb into the start of the line on «Бог — в начале» → a flare and a
     // wave there → goes out on «не в начале» (a12)
     const up = qq(t, c.s11 - .05, c.s11 + .7), fall = qq(t, c.dan - .1, c.land1), gone = qq(t, c.ne12 - .05, c.ne12 + .45);
     let fx, fy, fr, fop = 1, beam = 0;
-    if (t < c.dan - .1) { fx = lerp(SX0, DFX, zq); fy = lerp(lerp(SY0, DFY, zq), -70, up); fr = SR0; }
+    if (t < c.dan - .1) { fx = lerp(SX0, DFX, zq); fy = lerp(lerp(SY0, DFY, zq), -70, up); fr = SR0 * (1 + .45 * pulse(t, c.post, .15, .8)); }
     else {
       const a = (1 - mv) ** 2, b = 2 * mv * (1 - mv), e = mv * mv;
       fx = a * RCX + b * 70 + e * FX; fy = a * lerp(-30, RFY, fall) + b * 150 + e * LY;
@@ -471,13 +501,19 @@
       s += UN.thread([fx, fy + 8], p, { opacity: (.16 + .05 * Math.sin(t * 1.3 + i)) * th, width: .8 });
     }
     // the day counter under the comb: ДЕНЬ 1 · 2 · 3 …, the new number pops and glows
-    const dayN = c.days.filter(x => t >= x).length, dop = (1 - qq(t, c.s11 - .05, c.s11 + .45)) * q(t, c.sob - .05, .25);
+    const dayN = c.days.filter(x => t >= x).length, dop = (1 - qq(t, c.s11 - .05, c.s11 + .45)) * q(t, c.sob - .05, .25) * (1 - qq(t, c.post + .25, c.post + .85));
+    // v22 (слепой просмотр: «ДЕНЬ 1·2·3·4» на телефоне не читался): моно 26/30 (было 20/24) на тёмной плашке, выше
+    // нижнего затухания кадра
     if (dayN > 0 && dop > .003) {
-      let g = GF.mono(DAYX, DAYY, 'ДЕНЬ', { size: 20, anchor: 'start', opacity: .95 });
+      const DS = 26, NS = 30, DX = DAYX, DY = DAYY, NX0 = DX + 4 * .6 * DS + 24, NDX = 40;
+      const right = NX0 + (dayN - 1) * NDX + .3 * NS + 12;
+      let g = `<rect x="${f(DX - 12)}" y="${f(DY - NS * .92)}" width="${f(right - DX + 12)}" height="${f(NS * 1.2)}" rx="4" fill="#000" opacity=".84"/>` +
+        `<rect x="${f(DX - 12)}" y="${f(DY - NS * .92)}" width="${f(right - DX + 12)}" height="${f(NS * 1.2)}" rx="4" fill="none" stroke="#fff" stroke-width="1.1" opacity=".55"/>`;
+      g += GF.mono(DX, DY, 'ДЕНЬ', { size: DS, anchor: 'start', opacity: .97 });
       for (let k = 0; k < dayN; k++) {
-        const x = DAYX + 70 + k * 38, a = c.days[k], fl = pulse(t, a, .06, .5);
-        if (k) g += GF.mono(x - 19, DAYY, '·', { size: 20, anchor: 'middle', opacity: .75 });
-        g += GF.zoom(GF.mono(x, DAYY, String(k + 1), { size: 24, anchor: 'middle', opacity: .88 + .12 * fl, glow: fl > .15 }), x, DAYY - 8, 1 + .7 * (1 - qq(t, a, a + .3)));
+        const x = NX0 + k * NDX, a = c.days[k], fl = pulse(t, a, .06, .5);
+        if (k) g += GF.mono(x - NDX / 2, DY, '·', { size: DS, anchor: 'middle', opacity: .8 });
+        g += GF.zoom(GF.mono(x, DY, String(k + 1), { size: NS, anchor: 'middle', opacity: .9 + .1 * fl, glow: fl > .15 }), x, DY - 10, 1 + .7 * (1 - qq(t, a, a + .3)));
       }
       s += `<g opacity="${f(dop)}">${g}</g>`;
     }
@@ -495,7 +531,7 @@
     s += tline(t, rev, now, fut);
     // the world, the fire and its labels at the start of the line
     s += world(FX, LY, q(t, c.sotv, .9) * (1 - qq(t, c.ne12, c.ne12 + .6)), t);
-    if (fop > .003 && fy > -60) s += fire(fx, fy, fr, fop, t, beam, wave(t, [c.land1, c.land, c.dal]));
+    if (fop > .003 && fy > -60) s += fire(fx, fy, fr, fop, t, beam, wave(t, [c.post, c.land1, c.land, c.dal]));
     const lab = 1 - .7 * qq(t, c.ne12, c.ne12 + .6);
     s += `<g opacity="${f(lab)}">` + GF.typed(LBX, LBY1, 'СОТВОРИЛ МИР', t, c.sotv, { size: 14, anchor: 'start', glow: true }) +
       GF.typed(LBX, LBY2, 'ДАЛ ЗАКОН', t, c.dal, { size: 14, anchor: 'start', glow: true }) + '</g>';

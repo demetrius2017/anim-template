@@ -49,7 +49,7 @@ QUESTIONS = """# Вопросы после просмотра
 
 def main(dst):
     dst = Path(dst)
-    for n in (1, 2):
+    for n in (1, 2, 3):
         work = ROOT / f"eps/god_future_p{n}"
         bv = work / "qa/blind_view"
         text = (bv / f"p{n}_text.md").read_text()

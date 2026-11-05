@@ -136,7 +136,7 @@ def blind_text(names):
     card = json.loads((WORK / "build/script.json").read_text())["end_card"]["text"]
     dur = words["duration"]
     mmss = lambda s: f"{int(s // 60)}:{s % 60:04.1f}"
-    lines = [f"Ролик: YouTube Shorts / Instagram Reels 9:16, ≈{int(dur // 60)}:{int(dur % 60):02d}, часть {NAME[-1]} из двух.",
+    lines = [f"Ролик: YouTube Shorts / Instagram Reels 9:16, ≈{int(dur // 60)}:{int(dur % 60):02d}, часть {NAME[-1]} из трёх.",
              f"Листы кадров: {', '.join(names)} — по 30 кадров (6 в ряд, 5 рядов), кадр каждые 2 секунды. "
              "Кадр №N на листе K (слева направо, сверху вниз, с 1) = секунда (K−1)·60 + (N−1)·2.",
              "Ниже — закадровый текст с временем начала каждой фразы (мин:сек).", ""]
