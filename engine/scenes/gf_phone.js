@@ -236,6 +236,9 @@
       const g = fl > .3;
       if (k === 0) s += GF.mono(LBX, y + 7, '7 000+', { size: 21, anchor: 'start', glow: true, opacity: .97 }) +
         GF.mono(LBX + 7 * .6 * 21, y + 7, 'ЯЗЫКОВ', { size: 16, anchor: 'start', opacity: .95, glow: g });
+      // blind view v7: a plain ✓ for «7 000+ ЯЗЫКОВ» overclaims (ChatGPT officially — 60 languages, translators — hundreds):
+      // once ticked, a small honest note under the row
+      if (k === 0 && d > .003) s += `<g opacity="${f(d)}">` + GF.mono(LBX, y + 27, 'ПОКА — СОТНИ', { size: 13, anchor: 'start', opacity: .9 }) + '</g>';
       else s += GF.mono(LBX, y + 6, SKILL[k], { size: 16, anchor: 'start', opacity: .95, glow: g });
     }
     return s + icons(t);
