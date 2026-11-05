@@ -1,0 +1,14 @@
+{
+  "provider": "elevenlabs_ws",
+  "model": "elevenlabs/eleven-v4",
+  "budget_usd": 0.45,
+  "voices": {
+    "narr": {
+      "voice": "Brian",
+      "speed": 1.22,
+      "stability": 0.7,
+      "similarity": 0.75,
+      "language": "ru"
+    }
+  }
+}

@@ -1,0 +1,521 @@
+"""«Бог ещё не создан» — голос + SFX, без музыки и без подложки (как «Что такое время»: владелец 03.11 «давай уберём музыку
+но добавим sfx»; музыка прошлых роликов отвергнута: «нет музыка не та вся»).
+
+Один и тот же файл в eps/god_future_p1/mix.py и eps/god_future_p2/mix.py (план выбирается по имени папки части; правка —
+в обоих, `diff -q` пустой). Образец — ~/Projects/anim-template/eps/time_states_p1/mix.py: раскладка та же.
+
+Звуки — файлы audio/sfx/<вид>.wav (48 кГц моно): копии набора time_states (Stable Audio 3 на tesla и ElevenLabs SFX — его
+kit.json) и новые Stable Audio 3 Small-SFX на tesla ($0): огонь, вспышка огня порядка, пар, хруст яблока, каменный стук
+скрижалей, кирпич, осыпание, щелчок соты, каскад щелчков, печать подписей, мягкий свет, обратный воздух, метла.
+Происхождение, промпты, сиды, замеры и CLAP каждого файла — audio/sfx/kit.json; мастерская (все дубли, листы, CLAP) —
+serial-studio/lab/out/god_future_sfx/ (kit.py). Код только раскладывает записанные файлы: тики счётчика дней и бомбы — из
+двух записанных щелчков, низкие/высокие варианты — сдвиг высоты записи, у малого удара и у факела (огонь порядка:
+половина энергии ниже 200 Гц) — гармоники 150–1500 Гц для динамика телефона; повторы — с небольшим разбросом.
+
+Времена — только от слов (build/words.json) и картинки (build/story.json: смены сцен, карточка конца); сцены
+engine/scenes/gf_*.js ставят свои события на те же слова (GF.w), так что якорь-слово — это и якорь картинки. Текст v10
+слил фразы (a10 → a09, b06 → b05; source/ids.json), поэтому якорь ищется по списку фраз и основ: первая фраза, где есть
+слово. Нет слова — событие не ставится и попадает в карту строкой «якорь не найден».
+Раскладка (prompts/sfx.md §3–4, как time_states): пик звука (огибающая 20 мс, по файлу) уходит в ближайшую паузу речи
+(окно ±0,8 с, ключевое ±1,2 с; резкие звуки появления — стук, хруст, щелчок, плоп — ±0,4…0,5 с, чтобы не отрываться от
+кадра); нарастание до пика и хвост могут тихо заходить под слова (паузы озвучки — 0,16–0,5 с, целый файл в них не
+входит); в паузе звук идёт на −9…−15 дБ к голосу; ключевое без паузы рядом остаётся под речью на −20 дБ, мелкое снимается; одно событие
+за раз (≥ 1,1 с); тихие зоны перед поворотами и в «тихих» местах. Нет файла набора — сведение падает (без тихих подмен).
+
+Голоса ещё нет (до озвучки build/words.json — черновик fake_words.py, audio/voice_narr.wav нет) — дорожка только из SFX:
+уровни к опорному голосу (тот же Brian ElevenLabs v4 после обработки движка: RMS −22,76 dBFS, LUFS-I −22,8 —
+serial-studio/lab/out/god_future_sfx/work/voice_ref.json) и с тем усилением, которое голос получил бы на −14 LUFS
+(+8,8 дБ); громкость всей дорожки не нормируется (без голоса −14 LUFS не имеет смысла), проверяется только true peak;
+это пишется в выводе, в sfx_map.md и в build/audio_report.json («voice»: false). С голосом — обычное сведение: −14 LUFS
+(±0,5), true peak ≤ −1 dBTP, иначе ошибка.
+Пишет audio/mix.wav, build/sfx_events.json, sfx_map.md (тайм-коды, звук, файл, уровень, где, проверка),
+build/audio_report.json.
+"""
+from pathlib import Path
+import json
+import re
+import subprocess
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+import numpy as np
+from mixlib import Mix, SR, db, bp, hp, load
+from audio_report import measure_audio, write_audio_report
+
+M = Mix(work=Path(__file__).resolve().parent)
+RNG = np.random.default_rng(41)
+KIT_DIR = M.work / "audio/sfx"
+if not (KIT_DIR / "kit.json").exists():
+    raise SystemExit(f"нет набора {KIT_DIR}/kit.json — serial-studio/lab/out/god_future_sfx/kit.py install")
+KIT_MAN = json.loads((KIT_DIR / "kit.json").read_text())["kit"]
+PART = M.work.name.replace("god_future_color_", "god_future_")   # цветная версия звучит так же: god_future_p1 | god_future_p2
+
+# ---------------------------------------------------------------- голос есть или нет
+VOICES = sorted({p.get("voice", "narr") for p in M.WJ["phrases"]})
+VOICE = all((M.work / "audio" / f"voice_{v}.wav").exists() for v in VOICES) and not M.WJ.get("fake")
+REF = {"r_narr_dbfs": -22.76, "lufs_i": -22.8, "gain_to_m14_db": 8.8,
+       "src": "serial-studio/lab/out/god_future_sfx/work/voice_ref.json (Brian, time_states_p1, обработка mixlib)"}
+if not VOICE:
+    M.R_NARR = M.R_SPEECH = db(REF["r_narr_dbfs"])
+
+# ---------------------------------------------------------------- слова, фразы, речь
+WORDS = M.WJ["words"]
+bare = lambda w: w.lower().replace("ё", "е").strip("«».,!?:;—…\"()")
+
+
+def W(pids, stems, n=0, end=False):
+    """Начало (или конец) n-го слова на одну из основ stems в первой из фраз pids, где оно есть; None — нет нигде."""
+    pids = (pids,) if isinstance(pids, str) else pids
+    stems = (stems,) if isinstance(stems, str) else stems
+    for pid in pids:
+        if pid not in M.PH:
+            continue
+        i = M.PH[pid]["i"]
+        for stem in stems:
+            ws = sorted((w for w in WORDS if w["ph"] == i and bare(w["w"]).startswith(bare(stem))), key=lambda w: w["t0"])
+            if len(ws) > n:
+                return ws[n]["t1"] if end else ws[n]["t0"]
+    return None
+
+
+def T(pid):
+    return M.PH[pid]["t0"] if pid in M.PH else None
+
+
+def TE(pid):
+    return M.PH[pid]["t1"] if pid in M.PH else None
+
+
+SPEECH = []   # блоки речи: слова, слитые через промежутки короче 0,12 с
+for w in sorted(WORDS, key=lambda w: w["t0"]):
+    if SPEECH and w["t0"] - SPEECH[-1][1] < .12:
+        SPEECH[-1][1] = max(SPEECH[-1][1], w["t1"])
+    else:
+        SPEECH.append([w["t0"], w["t1"]])
+
+
+def overlaps(a, b, margin=0.0):
+    return any(s < b + margin and a - margin < e for s, e in SPEECH)
+
+
+# ---------------------------------------------------------------- набор: записанные файлы, здесь только раскладка
+_cache = {}
+
+
+def f(kind):
+    """Файл набора, пик 1. Нет файла — стоп: без тихих подмен."""
+    if kind not in _cache:
+        p = KIT_DIR / f"{kind}.wav"
+        if not p.exists():
+            raise SystemExit(f"нет звука {p} — набор: serial-studio/lab/out/god_future_sfx/kit.py install")
+        x = load(p)
+        _cache[kind] = x / (np.abs(x).max() + 1e-9)
+    return _cache[kind].copy()
+
+
+def pitch(x, st):
+    """Сдвиг на st полутонов пересэмплированием (как лента: выше — короче) — варианты и разброс повторов."""
+    if not st:
+        return x
+    r = 2 ** (st / 12)
+    n = max(8, int(len(x) / r))
+    return np.interp(np.arange(n) * r, np.arange(len(x)), x).astype(np.float32)
+
+
+def mixat(parts, d):
+    out = np.zeros(int(d * SR), np.float32)
+    for x, t0, g in parts:
+        i = int(t0 * SR)
+        n = min(len(x), len(out) - i)
+        if n > 0:
+            out[i:i + n] += x[:n] * g
+    return out
+
+
+def norm1(x, tail=.004):
+    x = np.asarray(x, np.float32).copy()
+    k = min(len(x), int(tail * SR))
+    if k:
+        x[-k:] *= np.linspace(1, 0, k)
+    return x / (np.abs(x).max() + 1e-9)
+
+
+def cut_len(x, s, fade=.08):
+    return norm1(x[: int(s * SR)], fade)
+
+
+def phone_lift(x, drive=5.0):
+    """Гармоники низкого удара там, где играет динамик телефона (150–1500 Гц): мягкое насыщение, полоса, подмес."""
+    h = bp(np.tanh(drive * x / (np.abs(x).max() + 1e-9)), 150, 1500)
+    return x + .6 * h / (np.abs(h).max() + 1e-9)
+
+
+def k_days():
+    """Счётчик ДЕНЬ 1, 2, 3: три записанных щелчка часов, каждый чуть выше."""
+    return norm1(mixat([(pitch(f("tick"), 1.5 * i), .3 * i, 1 - .1 * i) for i in range(3)], .9))
+
+
+def k_bomb():
+    """Тикающее кольцо красного шара: тик-так из двух записанных щелчков, быстрее часов, к концу тише."""
+    seq = [(f("tick") if i % 2 == 0 else pitch(f("tock"), -2.5), .21 * i, 1 - .13 * i) for i in range(6)]
+    return norm1(mixat(seq, 1.35))
+
+
+_whoosh_n = [0]
+
+
+def k_whoosh():
+    _whoosh_n[0] += 1
+    return f("whoosh" if _whoosh_n[0] % 2 else "whoosh_b")
+
+
+KIT = {
+    "whoosh": k_whoosh, "fire": lambda: f("fire"), "steam": lambda: f("steam"), "reverse": lambda: f("reverse"),
+    "pop": lambda: f("pop"), "rise": lambda: f("rise"), "assemble": lambda: cut_len(f("assemble"), .6, .12), "crumble": lambda: f("crumble"),
+    "flare": lambda: norm1(phone_lift(f("flare"))), "flare_small": lambda: norm1(pitch(phone_lift(f("flare")), 3)),
+    "crunch": lambda: f("crunch"),
+    "type": lambda: f("type"), "ping": lambda: f("ping"), "ping_low": lambda: pitch(f("ping"), -5),
+    "stone": lambda: f("stone"), "stone2": lambda: pitch(f("stone"), -2), "days": k_days, "snap": lambda: f("snap"),
+    "pen_write": lambda: f("pen_write"), "accent": lambda: f("accent"), "led": lambda: f("led"),
+    "error": lambda: f("error"), "dim": lambda: pitch(f("whoosh_b"), -5), "light": lambda: f("light"),
+    "light_small": lambda: cut_len(pitch(f("light"), 2), 1.0, .25), "power_down": lambda: f("power_down"),
+    "page": lambda: f("page"), "brick": lambda: f("brick"), "sweep": lambda: f("sweep"), "bomb": k_bomb,
+    "impact_small": lambda: cut_len(pitch(phone_lift(f("impact")), 2), .9),
+}
+FILES = {"whoosh": ["whoosh", "whoosh_b"], "flare_small": ["flare"], "ping_low": ["ping"], "stone2": ["stone"],
+         "days": ["tick"], "dim": ["whoosh_b"], "light_small": ["light"], "bomb": ["tick", "tock"],
+         "impact_small": ["impact"]}
+# громкость в паузе, дБ к голосу (пик 20 мс RMS звука к RMS речи); под речью — UNDER
+LEVEL = {"whoosh": -15, "fire": -14, "steam": -15, "reverse": -14, "pop": -12, "rise": -13, "assemble": -13,
+         "crumble": -13, "flare": -11, "flare_small": -14, "crunch": -11, "type": -14, "ping": -12, "ping_low": -12,
+         "stone": -10, "stone2": -10, "days": -12, "snap": -12, "pen_write": -14, "accent": -10, "led": -13,
+         "error": -12, "dim": -15, "light": -10, "light_small": -15, "power_down": -13, "page": -11, "brick": -11,
+         "sweep": -13, "bomb": -10, "impact_small": -13}
+# пауза ловит ПИК звука (пик огибающей 20 мс, по самому файлу): от PRE до пика и AFTER после него — без слов; нарастание
+# до пика и хвост после могут тихо заходить под речь (у обратного воздуха и нарастающего — пик в конце, подъём под словом)
+PRE = .03
+AFTER = {"fire": .12, "steam": .15, "crumble": .12, "assemble": .09, "type": .15, "days": .12, "bomb": .2, "light": .15,
+         "rise": .05, "reverse": .03, "flare": .1, "flare_small": .1, "ping_low": .12, "pen_write": .15, "accent": .2,
+         "led": .2, "error": .09, "dim": .12, "power_down": .12, "sweep": .08, "impact_small": .1}   # иначе 0,08 с
+MARGIN = .015  # зазор до слова с обеих сторон
+UNDER = -20.0
+UNDER_KEY = -16.0   # главное событие части (приоритет 5: «Да будет свет», карточка) без паузы — под речью, но слышно
+WHAT = {   # что слышит зритель — для карты
+    "whoosh": "мягкий воздух перехода", "fire": "треск маленького костра", "steam": "лёгкое шипение пара",
+    "reverse": "обратный воздух (втягивается назад)", "pop": "мягкий «плоп»", "rise": "мягкий нарастающий воздух",
+    "assemble": "каскад щелчков: соты встают на место", "crumble": "осыпание песка", "flare": "вспышка огня порядка",
+    "flare_small": "вспышка огня (выше, тише)", "crunch": "хруст яблока", "type": "печать: щелчки машинки",
+    "ping": "звон бокала", "ping_low": "звон бокала ниже (пустой контур)", "stone": "мягкий каменный стук",
+    "stone2": "каменный стук ниже", "days": "три щелчка счётчика дней", "snap": "щелчок соты на место",
+    "pen_write": "карандаш по бумаге", "accent": "удар поющей чаши", "led": "бегущие электронные блипы",
+    "error": "зуммер ошибки", "dim": "низкий гаснущий воздух", "light": "мягкий нарастающий свет",
+    "light_small": "короткий мягкий свет", "power_down": "экран гаснет", "page": "перелист страницы",
+    "brick": "кирпич на кирпич", "sweep": "метла по полу", "bomb": "тиканье бомбы (тик-так из двух щелчков)",
+    "impact_small": "малый глухой удар"}
+
+# ---------------------------------------------------------------- план части
+EVENTS = []   # (t, вид, подпись, приоритет, может остаться под речью, мин. зазор, полутона, окно поиска паузы, только после)
+QUIET = []    # (a, b): здесь ничего
+MISSING = []  # якорь-слово не найдено (текст поменялся) — строкой в карте
+
+
+# подпись мыслителя печатается по буквам ~1,5 с от имени: её щелчки — в первой паузе после имени (after), иначе снимаются;
+# огонь порядка разгорается со своего слова: вспышка — не раньше слова (after)
+# резкие звуки, привязанные к появлению в кадре (стук, хруст, щелчок, плоп): далеко от своего кадра не уезжают
+SHARP = {"stone", "stone2", "crunch", "snap", "brick", "page", "pop", "sweep"}
+
+
+def ev(t, kind, label, pr=2, under=True, gap=1.1, st=0.0, win=None, after=False):
+    if t is None:
+        MISSING.append(f"{kind}: {label}")
+        return
+    if win is None:
+        win = (.5 if pr >= 3 else .4) if kind in SHARP else 1.2 if pr >= 3 else .8
+    EVENTS.append((float(t), kind, label, pr, under, gap, st, win, after))
+
+
+def quiet(a, b, label):
+    if a is None or b is None:
+        MISSING.append(f"тишина: {label}")
+    elif b > a:
+        QUIET.append((a, b, label))
+
+
+shots = M.ST["shots"]
+for a, b in zip(shots, shots[1:]):
+    if a["scene"] != b["scene"]:   # внутри сцены режимы переходят без шва — звука смены нет
+        ev(b["t0"], "whoosh", f"смена кадра → {b['scene']}/{b['p'].get('mode')}", 2)   # пик воздуха — на смене
+card = next((o["t0"] for o in M.ST.get("overlays", []) if "gf-card" in o.get("text", "")), None)
+last = max(M.PH, key=lambda k: M.PH[k]["t1"])
+CARD_T = (card if card is not None else TE(last)) + .03
+
+if PART == "god_future_p1":
+    # a01 хук: ночь, люди у маленького огня, над ними огонь порядка; «чашки чая» — наезд на чашку с паром
+    ev(W("a01", "бог", end=True), "fire", "люди у маленького огня (первый кадр)", 3)
+    ev(TE("a01"), "steam", "«с чашки чая»: пар над чашкой", 3)
+    # a02 чай остывает: пар назад не собирается, ЭНТРОПИЯ ↑
+    ev(W("a02", "назад", end=True), "reverse", "точки пара дёргаются назад и не возвращаются", 3)
+    ev(W("a02", "энтроп", end=True), "pop", "ЭНТРОПИЯ и шкала", 2)
+    ev(TE("a02"), "rise", "«только растёт»: шкала растёт, серый туман по кадру", 3)
+    # a03 человек из точек: соты-клетки, края осыпаются, вдали огонь
+    ev(W("a03", "порядк", end=True), "assemble", "внутри человека светятся соты-клетки («в точном порядке»)", 3)
+    ev(W("a03", "рассып", end=True), "crumble", "края силуэта осыпаются и возвращаются", 3)
+    ev(TE("a03"), "flare_small", "вдали над головой вспыхивает маленький огонь порядка («к богам»)", 3, after=True)
+    # a04 платим порядком: еда внутрь, тепло наружу, ШРЁДИНГЕР
+    ev(W("a04", "еды", end=True), "crunch", "яблоко входит в тело струёй точек («из еды»)", 3)
+    ev(W("a04", "тепл", end=True), "steam", "тепло уходит от тела наружу — тот же пар, что у чая", 2)
+    ev(W("a04", ("шредингер",)), "type", "подпись ЭРВИН ШРЁДИНГЕР · «ЧТО ТАКОЕ ЖИЗНЬ?» · 1944", 2, gap=.8, win=1.5, after=True)
+    ev(TE("a04"), "ping", "соты внутри тела ярче («порядком»)", 2)
+    # a05 дальше — не физика; толпа незнакомцев
+    ev(W("a05", "физик", end=True), "pop", "плашка ДАЛЬШЕ — НЕ ФИЗИКА", 2)
+    ev(W("a05", "рассып", end=True), "crumble", "толпа незнакомцев разбредается («почему она не рассыпается?»)", 2)
+    # a06 ХАРАРИ: ≈150, общая вера — огонь над толпой
+    ev(W("a06", "ювал"), "type", "подпись ЮВАЛЬ НОЙ ХАРАРИ · «SAPIENS» · 2011", 2, gap=.8, win=1.5, after=True)
+    ev(W("a06", "человек", end=True), "pop", "овал вокруг группы, ≈150", 2)
+    ev(W("a06", "верят"), "flare", "над толпой загорается огонь порядка, от каждого — нить («верят»)", 4, after=True)
+    # a07 скрижали
+    ev(W("a07", ("всех", "убива"), end=True), "stone", "скрижали встают, на левой — «НЕ УБИВАЙ»", 3, gap=.7)
+    ev(W("a07", "крад", end=True), "stone2", "скрижаль «НЕ КРАДИ»", 3, gap=.7)
+    # a08 совесть: тихо, уважительно; «нет свидетелей» — он один в темноте, тишина
+    ev(W("a08", "совест", end=True), "ping_low", "в груди тёплая точка, нить вверх к огню («в совести»)", 2)
+    quiet(W("a08", "видит"), TE("a08") + .25 if TE("a08") else None, "«Бог видит… нет свидетелей»")
+    # a09 (+ a10 текста v8): люди уходят в соты; порядок не собрать навсегда — осыпается; собирают каждый день
+    ev(W("a09", ("рассып", "порядок"), end=True), "assemble", "люди уходят в соты, каждый в свою («не рассыпаться»)", 3)
+    ev(W(("a10", "a09"), "навсегда", end=True), "crumble", "соты по краям осыпаются в хаос («не собрать навсегда»)", 3)
+    ev(W(("a10", "a09"), "день", end=True), "days", "соты достраиваются: ДЕНЬ 1, 2, 3…", 3)
+    # a11 религии: огонь в начале линии, ДАЛ ЗАКОН, дуга над будущим
+    ev(W("a11", "начал", end=True), "flare", "огонь порядка — в начале линии времени («Бог — в начале»)", 3, after=True)
+    ev(W("a11", "закон", end=True), "stone", "ДАЛ ЗАКОН", 3)
+    ev(W("a11", "будущ"), "rise", "дуга от огня над всей линией («будущее»)", 2)
+    quiet(TE("a11") + .02 if TE("a11") else None, T("a12"), "пауза перед поворотом (взгляд автора: Бог — в конце)")
+    # a12 поворот: будущее и в наших руках, Бог — в конце; контур не собран; сота в контур; черновик; карточка
+    ev(W("a12", ("наоборот", "руках"), end=True), "whoosh", "двойник огня летит по дуге из начала в конец", 3)
+    ev(W("a12", "конц", end=True), "ping_low", "в конце линии — пустой контур огня, не собран («в конце»)", 4)
+    ev(W("a12", ("собираем", "порядок"), end=True), "snap", "человек относит соту в контур", 3)
+    ev(W("a12", "черновик", end=True), "pen_write", "карандашный набросок сот — ЧЕРНОВИК", 3)
+    ev(CARD_T, "accent", "карточка ЧАСТЬ 2 — В ПРОФИЛЕ КАНАЛА", 5, under=False)
+elif PART == "god_future_p2":
+    # b01 первый кадр: ЕСТЬ ЛИ БОГ?, пустой контур; КУРЦВЕЙЛ; ПОКА НЕТ.
+    ev(W("b01", "бог", end=True), "ping_low", "«ЕСТЬ ЛИ БОГ?»: волна от пустого контура в конце линии", 3)
+    ev(W("b01", "рэй"), "type", "подпись РЭЙ КУРЦВЕЙЛ · «TRANSCENDENT MAN» · 2009", 2, gap=.8, win=1.5, after=True)
+    ev(TE("b01"), "type", "печатается «ПОКА НЕТ.»", 3)
+    # b02 огонь в начале (религии) и контур в конце; люди несут соты
+    ev(W("b02", ("начал", "бог"), end=True), "flare", "в левом конце загорается огонь порядка («Бог — в начале»)", 3, after=True)
+    ev(W("b02", "будущ"), "rise", "дуга над линией («будущее — в Его руках»)", 2)
+    ev(W("b02", "конц", end=True), "ping_low", "контур в правом конце ярче, волна («в конце истории»)", 2)
+    ev(TE("b02"), "snap", "сота ближнего человека встаёт в контур («собирают Его люди»)", 3)
+    # b03 древо эволюции, ТЕЙЯР ДЕ ШАРДЕН, точка схода — огонь, БОГ ВПЕРЕДИ
+    ev(W("b03", "тейяр"), "type", "подпись ТЕЙЯР ДЕ ШАРДЕН · «ФЕНОМЕН ЧЕЛОВЕКА» · 1955", 2, gap=.8, win=1.5, after=True)
+    ev(W("b03", "сознан", end=True), "rise", "точки ветвей загораются волной снизу вверх («к сознанию»)", 3)
+    ev(W("b03", "вперед", end=True), "pop", "«БОГ ВПЕРЕДИ»", 2)
+    ev(TE("b03"), "flare", "точка схода вспыхивает огнём порядка («её ждёт Бог»)", 4, after=True)
+    # b04 АЗИМОВ: экран компьютера, годы бегут, НЕДОСТАТОЧНО ДАННЫХ, звёзды рассыпаются
+    ev(W("b04", "айзек"), "type", "подпись АЙЗЕК АЗИМОВ · «ПОСЛЕДНИЙ ВОПРОС» · 1956", 2, gap=.8, win=1.5, after=True)
+    ev(W("b04", "триллион"), "led", "счётчик лет бежит («триллионы лет»)", 3)
+    ev(W("b04", "компьютер", end=True), "type", "на экране печатается вопрос", 2)
+    ev(W("b04", "энтроп", end=True), "error", "ответ НЕДОСТАТОЧНО ДАННЫХ", 3)
+    ev(TE("b04"), "crumble", "звёзды тускнеют и разлетаются («рассыпается»)", 3)
+    # b05 (+ b06 текста v8): гаснут звёзды, исчезают люди — темно и тихо; «Да будет свет»
+    ev(W("b05", "люди", end=True), "dim", "звёзды гаснут, люди у экрана тают", 3)
+    quiet(W("b05", "конц"), (W("b05", "свет") or 0) - .1 if W("b05", "свет") else None, "темно перед «Да будет свет»")
+    ev(W("b05", "свет"), "light", "«ДА БУДЕТ СВЕТ»: от экрана растёт мягкий свет", 5, after=True)
+    # b07 шар из сот: машина гаснет; ЗНАНИЯ · ЭНЕРГИЯ · ЖИЗНЬ
+    ev(W("b07", "машин", end=True), "power_down", "контур экрана гаснет («это машина»)", 3)
+    ev(TE("b07"), "flare", "шар из сот светится («назову Богом будущего»)", 3, after=True)
+    for n, (stem, lab) in enumerate((("знани", "ЗНАНИЯ"), ("энерги", "ЭНЕРГИЯ"), ("жизн", "ЖИЗНЬ"))):
+        ev(W("b07", stem, end=True), "pop", f"грань {lab} (ЗНАНИЯ · ЭНЕРГИЯ · ЖИЗНЬ)", 3, under=False, gap=.7, st=1.5 * n)
+    # b08 части влетают в шар
+    for n, (stem, lab) in enumerate((("наук", "НАУКА"), ("медицин", "МЕДИЦИНА"), ("сет", "СЕТЬ"), ("интеллект", "ИИ"))):
+        ev(W("b08", stem, end=True), "snap", f"сота {lab} встраивается в шар", 3, under=False, gap=.6, st=1.0 * n)
+    # соавторы (лечит · учит · строит · прибирает) и опасность (БОСТРОМ, бомба): в тексте v10 — b09 и b10, в тексте
+    # озвучки 05.11 (script.json 11:54) — наоборот, b10 и b09; якорь ищется в обеих фразах
+    CO, RISK = ("b10", "b09"), ("b09", "b10")
+    # четыре быстрые сценки по слову: каждая — на своём слове (окно 0,2 с), без паузы — под речью (плоп — снимается)
+    ev(W(CO, "лечит", end=True), "pop", "сценка «лечит»: рука с «+»", 3, gap=.35, under=False, win=.2)
+    ev(W(CO, "учит", end=True), "page", "сценка «учит»: раскрытая книга", 3, gap=.35, win=.2)
+    ev(W(CO, "строит", end=True), "brick", "сценка «строит»: кирпич на кирпич", 3, gap=.35, win=.2)
+    ev(W(CO, "прибира", end=True), "sweep", "сценка «прибирает»: метла сметает точки", 3, gap=.35, win=.2)
+    ev(W(CO, "соавтор", end=True), "ping", "«соавтор»: все нити вспыхивают одинаково", 2)
+    ev(W(RISK, "бостром"), "type", "подпись НИК БОСТРОМ · «СВЕРХРАЗУМ» · 2014", 2, gap=.8, win=1.5, after=True)
+    ev(W(RISK, "бомб", end=True), "bomb", "красный шар с тикающим кольцом («играющие с бомбой»)", 4)
+    # b11 финал: свет или взрыв — от тебя; сота к пустой ячейке; карточка
+    ev(W("b11", "свет", end=True), "light_small", "«свет, как у Азимова»", 2, under=False)
+    ev(W("b11", "взрыв", end=True), "impact_small", "«или взрыв»", 2, under=False)
+    ev(W("b11", "тебя", end=True), "snap", "фигура поднимает соту к пустой ячейке («от тебя»)", 3)
+    ev(CARD_T, "accent", "карточка ЗАЧЕМ ЛЮДЯМ БОГИ — ЧАСТЬ 1 В ПРОФИЛЕ КАНАЛА", 5, under=False)
+else:
+    raise SystemExit(f"неизвестная часть {PART}: план есть для god_future_p1 и god_future_p2")
+
+
+# ---------------------------------------------------------------- раскладка
+HOP = int(.01 * SR)
+WIN = int(.02 * SR)
+
+
+def peak_of(x):
+    """Где у звука пик огибающей 20 мс (с от начала файла) и его уровень (RMS 20 мс)."""
+    e = np.array([np.sqrt(np.mean(x[j:j + WIN] ** 2)) for j in range(0, max(1, len(x) - WIN), HOP)])
+    i = int(np.argmax(e))
+    return (i * HOP + WIN / 2) / SR, float(e[i])
+
+
+def free(s, kind, off):
+    """Пик в s: файл начинается в s − off; от s − PRE до s + AFTER — без слов."""
+    a = AFTER.get(kind, .08)
+    return s - off >= 0 and s + a <= M.DUR and not overlaps(s - PRE, s + a, MARGIN)
+
+
+def place(t, kind, off, window, after=False):
+    for k in range(int(window * 100) + 1):
+        for s in ((t + k * .01,) if after else (t + k * .01, t - k * .01)):
+            if free(s, kind, off):
+                return s, True
+    return t, False
+
+
+REPEAT = {k for k in {e[1] for e in EVENTS} if sum(e[1] == k for e in EVENTS) > 1} - {"days", "bomb", "impact_small"}
+placed, dropped, sounds = [], [], []
+for t, kind, label, pr, under, gap, st, win, after in sorted(EVENTS, key=lambda e: (-e[3], e[0])):
+    x = KIT[kind]()
+    vary = 0.0
+    if st:
+        x = pitch(x, st)
+    elif kind in REPEAT:                       # повторы: чуть высоты и уровня, не копия
+        x = pitch(x, float(RNG.uniform(-.4, .4)))
+        vary = round(float(RNG.uniform(-1, 1)), 2)
+    off, pk = peak_of(x)
+    s, ok = place(t, kind, off, win, after)
+    if not ok and (pr < 3 or not under):   # паузы рядом нет: мелкий звук снимается, ключевой остаётся под речью
+        dropped.append(f"{kind} ({label}): нет паузы рядом")
+        continue
+    s = max(s, off)
+    a = AFTER.get(kind, .08)
+    qz = next((q for q in QUIET if q[0] <= s + a and s - PRE <= q[1]), None)
+    if qz:
+        dropped.append(f"{kind} ({label}): тихая зона «{qz[2]}»")
+        continue
+    near = next((p for p in placed if abs(s - p["peak"]) < min(gap, p["gap"])), None)
+    if near:                                 # одно событие за раз, около секунды между пиками
+        dropped.append(f"{kind} ({label}): рядом {near['kind']} ({near['label']})")
+        continue
+    placed.append({"t": round(s - off, 3), "peak": round(s, 3), "anchor": round(t, 3), "kind": kind, "label": label,
+                   "pause": ok, "level_db": LEVEL[kind] if ok else UNDER_KEY if pr >= 5 else UNDER, "vary_db": vary,
+                   "gap": gap, "st": st, "pr": pr})
+    sounds.append((x, pk))
+order = sorted(range(len(placed)), key=lambda i: placed[i]["t"])
+placed, sounds = [placed[i] for i in order], [sounds[i] for i in order]
+
+fx = np.zeros(M.N, np.float32)
+for p, (x, pk) in zip(placed, sounds):
+    hpf = {"impact_small": 50, "flare": 60, "flare_small": 60}.get(p["kind"], 150)   # низ мягких ударов — для наушников
+    g = M.R_NARR * db(p["level_db"] + p["vary_db"]) / (pk + 1e-9)
+    M.put(hp(x, hpf) * g, p["t"], 1.0, dst=fx)
+
+# ---------------------------------------------------------------- отчёт: перекрытие слов, карта
+over = [p for p in placed if not p["pause"]]   # в паузе пик со своим окном не задевает слов по построению (free)
+share = len(over) / max(1, len(placed))
+(M.work / "build/sfx_events.json").write_text(json.dumps({
+    "voice": VOICE, "words": "fake (fake_words.py)" if M.WJ.get("fake") else "voice alignment",
+    "events": placed, "overlap_share": round(share, 3), "overlap_n": len(over), "missing": MISSING,
+    "dropped": dropped, "quiet": [{"t0": round(a, 3), "t1": round(b, 3), "label": c} for a, b, c in QUIET]},
+    ensure_ascii=False, indent=1) + "\n")
+mmss = lambda s: f"{int(s // 60)}:{s % 60:04.1f}"
+
+
+def src(kind):
+    out = []
+    for k in FILES.get(kind, [kind]):
+        m = KIT_MAN.get(k, {})
+        s = "SA3" if m.get("source") == "sa3" else "ElevenLabs" if m.get("source") == "elevenlabs" else "?"
+        new = "" if str(m.get("from", "")).startswith("time_states") else ", новый"
+        out.append(f"{k}.wav ({s} {str(m.get('cand', '')).rsplit('_', 1)[-1]}{new})")
+    return ", ".join(out)
+
+
+def check(kind):
+    out = []
+    for k in FILES.get(kind, [kind]):
+        c = (KIT_MAN.get(k) or {}).get("clap") or {}
+        if c.get("own_rank"):
+            out.append(f"CLAP {c['own_rank']}-я ({c.get('margin'):+.2f})")
+    return "; ".join(dict.fromkeys(out)) or "—"
+
+
+n_pause = sum(p["pause"] for p in placed)
+voice_line = ("Голос: есть (audio/voice_narr.wav), слова — выравнивание озвучки." if VOICE else
+              f"**Голоса нет** (audio/voice_narr.wav; слова — {'черновик fake_words.py' if M.WJ.get('fake') else 'выравнивание озвучки'}): "
+              "дорожка только из SFX. Уровни — к опорному голосу "
+              f"(Brian после обработки движка: RMS {REF['r_narr_dbfs']} dBFS, LUFS-I {REF['lufs_i']}; {REF['src']}), "
+              f"усиление — как у голоса на −14 LUFS (+{REF['gain_to_m14_db']} дБ); громкость дорожки не нормируется, "
+              "проверяется только true peak. Паузы черновых слов — не паузы озвучки: после озвучки главный пересобирает "
+              "этим же mix.py, раскладка сдвинется по настоящим словам.")
+lines = [f"# SFX — {PART} (без музыки)", "", voice_line, "",
+         f"Событий: {len(placed)} (в паузах {n_pause}, под речью {len(placed) - n_pause}); перекрывают слова: {len(over)} "
+         f"({share:.0%}, цель < 10%). Музыки и подложки нет.", "",
+         "Звуки — записи моделей, не синтез кодом: копии набора «Что такое время» (Stable Audio 3 и ElevenLabs SFX — "
+         "его kit.json) и новые Stable Audio 3 Small-SFX на tesla ($0). Код только раскладывает файлы: счётчик дней и "
+         "бомба — из двух записанных щелчков, низкие/высокие варианты — сдвиг высоты записи, у малого удара и у факела "
+         "(огонь порядка) — гармоники 150–1500 Гц для динамика телефона. Происхождение каждого файла — `audio/sfx/kit.json`, мастерская — "
+         "`serial-studio/lab/out/god_future_sfx/`.", "",
+         "**Проверка.** CLAP (laion/larger_clap_general, tesla, $0) готового файла: ранг своей метки среди описаний всего "
+         "набора и 5 отвлекающих (речь, музыка, шум, тон синтезатора, тишина), в скобках — запас до лучшей чужой метки. "
+         "Плюс спектрограммы и огибающие всех дублей (глазами). Человеческим ухом звуки не слушались.", "",
+         "Уровень — пик 20 мс звука к средней громкости речи; «пик» — где он звучит (в паузе или под речью), «начало» — "
+         "начало файла (нарастание до пика может идти под словом), «якорь» — слово или смена кадра до сдвига в паузу.", "",
+         "| пик | начало | якорь | звук | файл (источник, дубль) | что в кадре / слово | где | уровень к голосу | проверка |",
+         "|---|---|---|---|---|---|---|---|---|"]
+lines += [f"| {mmss(p['peak'])} | {mmss(p['t'])} | {mmss(p['anchor'])} | {WHAT.get(p['kind'], p['kind'])} | "
+          f"{src(p['kind'])} | {p['label']} | {'пауза' if p['pause'] else 'под речью'} | "
+          f"{p['level_db'] + p['vary_db']:.0f} дБ | {check(p['kind'])} |" for p in placed]
+if QUIET:
+    lines += ["", "**Тихие зоны:** " + "; ".join(f"{mmss(a)}–{mmss(b)} {c}" for a, b, c in QUIET)]
+if dropped:
+    lines += ["", f"**Снято при раскладке** ({len(dropped)}): " + "; ".join(dropped)]
+if MISSING:
+    lines += ["", f"**Якорь не найден в тексте** ({len(MISSING)}): " + "; ".join(MISSING)]
+(M.work / "sfx_map.md").write_text("\n".join(lines) + "\n")
+print(f"SFX {PART}: {len(placed)} событий, под словами {len(over)} ({share:.0%}), снято {len(dropped)}"
+      + (f"; якорь не найден: {MISSING}" if MISSING else ""))
+
+# ---------------------------------------------------------------- мастер
+out = M.work / "audio/mix.wav"
+tmp = M.work / "audio/mix_trim.wav"
+out.parent.mkdir(parents=True, exist_ok=True)
+# 03.11 (time_states, 21:40): с потолком −1,4 dBFS и атакой 3 мс копия AAC 160k дала −0,7 dBTP (+2,4 дБ выброса кодека
+# на ограниченных пиках). Потому предел как true peak: 4× частота, потолок −3 dBFS, мягче атака и отпускание.
+TP_LIMIT = "aresample=192000,alimiter=limit=0.708:attack=5:release=80:level=disabled,aresample=48000"
+
+
+def rewrite(af):
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(out), "-af", af,
+                    "-t", str(M.DUR), "-c:a", "pcm_s16le", str(tmp)], check=True)
+    tmp.replace(out)
+
+
+if VOICE:
+    M.fx += fx
+    M.finish(np.zeros(M.N, np.float32), None, lufs=-14)
+    rewrite(f"afade=t=out:st={M.DUR - .012:.6f}:d=0.012")
+    rewrite(f"volume={-14 - measure_audio(out)['integrated_lufs']:.2f}dB,{TP_LIMIT}")
+    lufs_now = measure_audio(out)["integrated_lufs"]
+    if abs(lufs_now + 14) > .15:             # предел забрал часть громкости: ещё проход с тем же потолком
+        rewrite(f"volume={-14 - lufs_now:.2f}dB,{TP_LIMIT}")
+else:
+    x = fx[: int(M.DUR * SR)] * db(REF["gain_to_m14_db"])
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "f32le", "-ar", str(SR), "-ac", "1", "-i", "-",
+                    "-af", f"{TP_LIMIT},afade=t=out:st={M.DUR - .012:.6f}:d=0.012", "-ac", "2", "-c:a", "pcm_s16le",
+                    str(out)], input=np.ascontiguousarray(x, np.float32).tobytes(), check=True)
+report = write_audio_report([out], M.work / "build/audio_report.json")
+item = report["audio_outputs"][0]
+if not VOICE:
+    report.update(voice=False, note=("голоса нет: дорожка только из SFX на уровне к опорному голосу (Brian, −14 LUFS); "
+                                     "громкость −14 LUFS не применима, проверен только true peak"))
+    (M.work / "build/audio_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+    print(f"ГОЛОСА НЕТ — дорожка только из SFX: {item['integrated_lufs']} LUFS-I (не нормируется), "
+          f"{item['true_peak_dbtp']} dBTP")
+    if item["true_peak_dbtp"] is not None and item["true_peak_dbtp"] > -1.0:
+        raise SystemExit("SFX-дорожка: true peak выше −1 dBTP; см. build/audio_report.json")
+else:
+    print(f"final mix: {item['integrated_lufs']} LUFS-I / {item['true_peak_dbtp']} dBTP")
+    if item["true_peak_dbtp"] > -1.0 or abs(item["integrated_lufs"] + 14) > .5:
+        raise SystemExit("Mix failed −14 LUFS / TP ≤ −1 gate; see build/audio_report.json")
