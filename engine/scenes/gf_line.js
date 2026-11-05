@@ -49,7 +49,8 @@
  *               огонёк, контур вспыхивает. С K.card − 0,5 рисунок тускнеет до 40 % — под карточку ЧАСТЬ 2 (story.py).
  * Часть 2 (первый кадр без наплыва — сразу целый; хук ленты; линия всё время в движении: по ней бегут огоньки,
  *          контур дышит и мерцает):
- *  notyet (b01) «ЕСТЬ ЛИ БОГ?» (моно 36) печатается с первого кадра; «бог» — волна от контура; «рэй» — подпись GF.thinker
+ *  notyet (b01) вверху «ЧАСТЬ 3 ИЗ 3 / ЧАСТИ 1 И 2 — В ПРОФИЛЕ КАНАЛА» (моно 19 / 14,5, как в части 2, гаснет к «пока»);
+ *               «ЕСТЬ ЛИ БОГ?» (моно 36) целиком с первого кадра (слепой просмотр v5: «ЕС▌» читали как глюк); «бог» — волна от контура; «рэй» — подпись GF.thinker
  *               «РЭЙ КУРЦВЕЙЛ · «TRANSCENDENT MAN» · 2009» (моно 12); «ответил» — по линии в контур бежит огонёк;
  *               «пока» — печатается крупно «ПОКА» (моно 46), «нет» — встаёт «НЕТ.» со вспышкой, контур вздрагивает волной.
  *  idea (b02)   «шутка» — «ПОКА» подчёркивается, контур вспыхивает; «идея» — по линии в контур бежит огонёк, в контуре
@@ -610,11 +611,17 @@
     s += flow(t, 4, 2.6, .95 * (1 - .6 * qq(t, c.rel, c.rel + .8)));
     s += comet(qq(t, c.otv - .05, c.otv + .7), LX0 + 6);
     s += comet(qq(t, c.ideya - .05, c.ideya + .75), LX0 + 6);
+    // «part 3 of 3» at the top from the first frame, as in part 2 (gf_law/hook); gone by «пока» (owner 05.11). Blind view v5:
+    // at 16/12 the second line was hard to read (2/2 on the full-size first frame) — 19/14.5, both lines bright
+    const badge = 1 - qq(t, c.otv - .1, c.poka);
+    if (badge > .003) s += `<g opacity="${f(badge)}">` + GF.mono(180, 33, 'ЧАСТЬ 3 ИЗ 3', { size: 19, anchor: 'middle', opacity: 1 }) +
+      GF.mono(180, 55, 'ЧАСТИ 1 И 2 — В ПРОФИЛЕ КАНАЛА', { size: 14.5, anchor: 'middle', opacity: .95 }) + '</g>';
+    const qy = QY + 18 * badge;   // the question sits lower under the badge, rises back as it goes
     // the question is typed from the very first frame; «ПОКА» on «пока», «НЕТ.» lands big on «нет»
     const qa = 1 - qq(t, c.rel, c.rel + .6);
     if (qa > .003) {
       const fl = pulse(t, c.bog1, .1, .6), nf = pulse(t, c.net, .06, .7) + .5 * pulse(t, c.shut, .1, .6);
-      s += `<g opacity="${f(qa)}">` + GF.typed(QX, QY, 'ЕСТЬ ЛИ БОГ?', t, -.06, { size: QS, cps: 22, anchor: 'start', op: .92 + .08 * fl, glow: true });
+      s += `<g opacity="${f(qa)}">` + GF.typed(QX, qy, 'ЕСТЬ ЛИ БОГ?', t, -1, { size: QS, cps: 22, anchor: 'start', op: .92 + .08 * fl, glow: true });
       if (t >= c.poka - .02) {
         const zp = 1 + .25 * (1 - qq(t, c.poka - .02, c.poka + .25));
         s += GF.zoom(GF.typed(AX, AY, 'ПОКА', t, c.poka - .02, { size: AS, cps: 22, anchor: 'start', glow: true }), AX + 2 * .6 * AS, AY - AS * .35, zp);
