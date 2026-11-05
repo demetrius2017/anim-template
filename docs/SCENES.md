@@ -138,3 +138,24 @@
 
 Необязательные `K.pill_text` (`un_protein`) и `K.tok_text`/`K.tok_val`/`K.tok_wt` (`un_observer`) — свои слова пилюль вместо
 токенов исходного ролика; без них кадр прежний. Безопасная зона площадок — `story.safe` (CLAUDE.md, «Раскадровка»).
+
+## «Бог ещё не создан» — `engine/scenes/gf_*.js` (05.11)
+
+Общий словарь — `gf_00_lib.js` (`window.GF`, грузится первым): время от слов `GF.w(K, id, 'основа')`, точки хаоса и соты порядка
+(`GF.cloud`, `GF.morph`, `GF.comb`, `GF.personPts`), огонь порядка `GF.spark`, подпись мыслителя `GF.thinker`, линия времени `GF.line`;
+регистрация `SCENES.имя = GF.scene('имя', (t, K, mode, p) => svg)` — наплыв из прошлой сцены делает сама. Стиль — как `un_*`
+(чёрный фон, точки и нити). Раскадровка и правила — `eps/god_future/source/storyboard.md`; K — `eps/god_future_pN/build/cues.json`.
+
+| сцена | режимы | что в кадре |
+|---|---|---|
+| `gf_tea` | hook, cool | люди у огня, над ними огонь порядка → наезд в чашку чая; пар расходится, шкала ЭНТРОПИЯ |
+| `gf_body` | gather, pay | туман собирается в человека с сотами внутри; яблоко — порядок внутрь, тепло наружу; ШРЁДИНГЕР |
+| `gf_crowd` | strangers, gossip, rules, conscience, order | толпа незнакомцев; нити сплетен и ≈150; общий огонь; скрижали НЕ УБИВАЙ / НЕ КРАДИ; совесть; соты |
+| `gf_line` | daily, past, flip, notyet, idea | линия времени ПРОШЛОЕ → БУДУЩЕЕ: огонь в начале, пустой контур в конце; шов частей 1 и 2 |
+| `gf_omega` | tree | древо эволюции сходится в точку «БОГ ВПЕРЕДИ» (Тейяр де Шарден) |
+| `gf_lastq` | ask, light, creator | экран компьютера: МОЖНО ЛИ ОБРАТИТЬ ЭНТРОПИЮ ВСПЯТЬ? — НЕДОСТАТОЧНО ДАННЫХ; звёзды гаснут; ДА БУДЕТ СВЕТ |
+| `gf_globe` | mind, parts, bomb, coauthors, future | шар из сот: ЗНАНИЯ · ЭНЕРГИЯ · ЖИЗНЬ; детали НАУКА · МЕДИЦИНА · СЕТЬ · ИИ; красная бомба (Бостром); соавторы |
+
+Проверка на tesla: `ANIM_TEMPLATE=<копия движка> python3 <serial-studio>/tools/remote_anim.py god_future_p1 --pull eps/god_future_p1/qa/x.jpg
+-- bash -c "python eps/god_future_p1/story.py && python render.py --story eps/god_future_p1/build/story.json --at 1,2 --sheet eps/god_future_p1/qa/x.jpg"`.
+Пробы альтернативного дизайна — `gfx_*.js` (одна сцена-образец на стиль).
