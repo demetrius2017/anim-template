@@ -79,3 +79,9 @@
 {"at": "2026-11-06T09:50:24Z", "event": "reserve", "reservation": "a143badcebb94dd48a98f49017ae653d", "model": "elevenlabs/eleven-v4", "voice": "Brian", "take": 1, "characters": 77, "reserved_usd": 0.00616}
 {"at": "2026-11-06T09:50:24Z", "event": "submitted", "reservation": "a143badcebb94dd48a98f49017ae653d", "id": "62427effba6244c095305d6b97ec1d12"}
 {"at": "2026-11-06T09:50:29Z", "event": "completed", "id": "62427effba6244c095305d6b97ec1d12", "reservation": "a143badcebb94dd48a98f49017ae653d", "cost_usd": 0.00616, "cost_basis": "published_per_character_rate", "audio_sha256": "ede6b28dffbcba0bd48aececd23e29ed1527a57a5ee861289bc11a95cf56ab52"}
+{"at": "2026-11-06T11:01:56Z", "event": "reserve", "reservation": "dad515a607f04aaab3868bb35fd4c621", "model": "elevenlabs/eleven-v4", "voice": "Brian", "take": 1, "characters": 130, "reserved_usd": 0.0104}
+{"at": "2026-11-06T11:01:56Z", "event": "submitted", "reservation": "dad515a607f04aaab3868bb35fd4c621", "id": "0f9e018e217943bfbdba366b32a7770c"}
+{"at": "2026-11-06T11:02:04Z", "event": "completed", "id": "0f9e018e217943bfbdba366b32a7770c", "reservation": "dad515a607f04aaab3868bb35fd4c621", "cost_usd": 0.0104, "cost_basis": "published_per_character_rate", "audio_sha256": "69b5f1189c64a717926b28615fd992efb05aea992ca65db064ed473f959faf63"}
+{"at": "2026-11-06T11:02:04Z", "event": "reserve", "reservation": "20c9a920979943c1ac7a6b80b4291fa5", "model": "elevenlabs/eleven-v4", "voice": "Brian", "take": 1, "characters": 172, "reserved_usd": 0.01376}
+{"at": "2026-11-06T11:02:05Z", "event": "submitted", "reservation": "20c9a920979943c1ac7a6b80b4291fa5", "id": "6210364a1102402bb9e5e4b2f61fa182"}
+{"at": "2026-11-06T11:02:12Z", "event": "completed", "id": "6210364a1102402bb9e5e4b2f61fa182", "reservation": "20c9a920979943c1ac7a6b80b4291fa5", "cost_usd": 0.01376, "cost_basis": "published_per_character_rate", "audio_sha256": "f86853968471c7aaa15b0f2360266dcb27cbea70cfc834d86e049b6279bfb672"}
