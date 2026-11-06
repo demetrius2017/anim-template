@@ -26,7 +26,7 @@
  *               «церковь» — левые точки собираются в церковь (стены, двускатная крыша, барабан, купол-луковица с крестом,
  *               дверь и окна; вспышка); «мечеть» — правые — в мечеть (купол с полумесяцем, минарет с балконом и полумесяцем);
  *               в дверях и окнах тёплый свет, люди дошли до дверей;
- *               «А ты давно там был?» — всё тише (×.35), по центру на тёмной плашке по словам печатается А ТЫ ДАВНО / ТАМ БЫЛ?
+ *               «А ты давно там был?» — всё тише (×.35), внизу, под зданиями (v9), на тёмной плашке по словам печатается А ТЫ ДАВНО / ТАМ БЫЛ?
  *               (моно 28, две строки), на конце «был» — вспышка (звук pop); вопрос держится всю паузу до «А теперь».
  *  f02 phone    «А теперь» — вопрос гаснет, здания рассыпаются в точки, огонь уходит вверх и гаснет, люди уходят; клетки
  *               шва Б возвращаются сверху; конец «телефон» — клетки по очереди отмечаются ✓ со вспышкой (звук checks: три
@@ -453,7 +453,8 @@
   // (warm — the fire is lit); lv — «А теперь»: the dots drift apart and go out
   function building(t, c, k, op, warm, lv) {
     const B = BLD[k], [w0, w1] = k === 0 ? [c.cerk, c.cerkE] : [c.mech, c.mechE];
-    const u = qq(t, w0 - .08, w1 + .05), g = lerp(.85 * q(t, c.vek + .15, 1.1), 1, u);
+    // blind view v9: on «в церковь, в мечеть» the buildings were still clouds — they gather from .9 s before their word, whole by its end
+    const u = qq(t, w0 - .9, w1), g = lerp(.85 * q(t, c.vek + .15, 1.1), 1, u);
     let P = GF.jitter(B.P.map((p, i) => [lerp(B.C[i][0], p[0], g), lerp(B.C[i][1], p[1], g)]), t, .35 + 2.2 * (1 - u), B.seed);
     if (lv > .003) P = GF.drift(P, t, c.at2, 34, B.seed + 9);
     const fl = pulse(t, w1 - .12, .1, .7), lo = qq(u, .55, 1) * (1 - lv);
@@ -531,12 +532,12 @@
     const qo = qq(t, c.a1 - .1, c.a1 + .2) * (1 - qq(t, c.at2 - .02, c.at2 + .3));
     if (qo > .003) {
       const pp = pulse(t, c.bylE + .02, .06, .55), l1 = 'А ТЫ ДАВНО', l2 = 'ТАМ БЫЛ?', cw = 28 * .6;
-      const b = `<rect x="34" y="120" width="292" height="98" rx="16" fill="#000" opacity=".86"/>` +
-        `<rect x="34" y="120" width="292" height="98" rx="16" fill="none" stroke="#fff" stroke-width="1.3" opacity="${f(.35 + .5 * pp)}"/>` +
-        (pp > .003 ? `<ellipse cx="180" cy="169" rx="${f(150 + 20 * pp)}" ry="${f(52 + 8 * pp)}" fill="url(#gf-warm)" opacity="${f(pp)}"/>` : '') +
-        GF.typed(180 - l1.length * cw / 2, 161, l1, t, c.a1 - .02, { size: 28, cps: 14, anchor: 'start', op: 1, glow: true }) +
-        GF.typed(180 - l2.length * cw / 2, 199, l2, t, c.tam - .02, { size: 28, cps: 18, anchor: 'start', op: 1, glow: true });
-      s += `<g opacity="${f(qo)}">${GF.zoom(b, 180, 169, 1 + .06 * pp)}</g>`;
+      const b = `<rect x="34" y="252" width="292" height="90" rx="16" fill="#000" opacity=".86"/>` +
+        `<rect x="34" y="252" width="292" height="90" rx="16" fill="none" stroke="#fff" stroke-width="1.3" opacity="${f(.35 + .5 * pp)}"/>` +
+        (pp > .003 ? `<ellipse cx="180" cy="297" rx="${f(150 + 20 * pp)}" ry="${f(48 + 8 * pp)}" fill="url(#gf-warm)" opacity="${f(pp)}"/>` : '') +
+        GF.typed(180 - l1.length * cw / 2, 289, l1, t, c.a1 - .02, { size: 28, cps: 14, anchor: 'start', op: 1, glow: true }) +
+        GF.typed(180 - l2.length * cw / 2, 327, l2, t, c.tam - .02, { size: 28, cps: 18, anchor: 'start', op: 1, glow: true });
+      s += `<g opacity="${f(qo)}">${GF.zoom(b, 180, 297, 1 + .06 * pp)}</g>`;
     }
 
     // ===== f02: МЕНЬШЕ («меньше») 4 ЛЕТ («четыре»; y 60, the four years under it, top ≥ 40) — gives way to the counter
