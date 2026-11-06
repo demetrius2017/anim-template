@@ -1,70 +1,57 @@
-/* gfc_line — «Бог ещё не создан», альтернативная версия «Цветная инфографика» (eps/god_future_color_p1, _p2): шов двух
- * частей, линия времени. Перенос gf_line.js основной версии (доводка 2 по слепому просмотру v1 —
- * eps/god_future/qa/blind_view_v1/summary.md): те же события на тех же словах (сценарий — шапка gf_line.js, раскадровка —
- * eps/god_future/source/storyboard.md, строки a10–a12 и b01–b02; текст — source/text_v15.md; K.a10 — часть a09 от «Но»,
- * её даёт storybase); словарь — gfc_00_lib.js (window.GFC), образец — eps/god_future/qa/style_flatcolor.jpg.
- * На телефоне сцена ужата в .72: главный объект — на всю ширину, подписи ≥ 11,5 (в зоне ×1,15), крупные слова — 18–46;
- * каждые 1,5–2,5 с — новое событие на слове. Дуги и купола «в Его руках» больше нет (купол/радуга) — две ладони из тёплых
- * точек. Крупную плашку ВЗГЛЯД АВТОРА ставит story.py (VIEWS) — в сцене её нет.
- * Геометрия та же, что у gf_line: линия времени y=280, x 24→336 — цветная полоса (бирюза → небо → фиалка → коралл →
- * золото, как GFC.line) с коралловой стрелкой; огонь порядка (GFC.spark, r 12) — в начале (40,280); пустой пунктирный
- * контур огня (r 30, внутри темно) — у конца (296,280); подписи ПРОШЛОЕ (бирюза) · СЕЙЧАС (белая, x 152) · БУДУЩЕЕ
- * (золото, до x 266) — Montserrat 11,5, y 306 (над плашкой ВЗГЛЯД АВТОРА: её верх — сцена y≈310). Люди — плоские
- * GFC.person ростом 100 без лиц, стоят на полосе; соты — цветные плитки (GFC.comb), у людей в сотах a10 — кремовые
- * фигурки (как в конце gfc_crowd/order); хаос — цветные точки. Красного нет (красный — только опасность).
+/* gfc_line — «Бог ещё не создан», альтернативная версия «Цветная инфографика» v2 (eps/god_future_color_p1): шов части 1 с
+ * gfc_law, линия времени. Перевод принятой чёрно-белой gf_line.js (источник содержания: те же события на тех же словах,
+ * те же позы на швах; раскадровка — eps/god_future/source/storyboard.md, строки a10–a12 и b01–b02; K.a10 — часть a09 от
+ * «Но», её даёт storybase) в дизайн v2 по образцу eps/god_future/qa/style_flatcolor.jpg; словарь — gfc_00_lib.js (GFC v2).
+ * В ролике сейчас идёт только режим daily (a09 от «Но», текст v21, кадр 69,17–75,78); past/flip (a11/a12) и часть 2
+ * (notyet/idea) перенесены из прежней gfc_line как есть (вид v1): в текущих роликах они не наступают — part2-ветка gf_line
+ * в новой части 3 не используется, а в части 1 за a10 идёт c10 (gfc_law), фраз a11/a12 нет.
  *
- * Одна непрерывная линия времени на часть: картинка зависит только от t и K, p.mode — лишь имя кадра, поэтому между
- * режимами нет швов. Часть — по K: есть K.a10/a11/a12 — часть 1, есть K.b01/b02 — часть 2 (иначе по mode).
- * Нет слова в K.words — доля фразы (черновые доли DEF только для scene_test без K).
+ * Чем вид отличается от gf_line (v2, владелец о прошлой цветной: «графика всё же не как на предложенной картинке, цветов
+ * мало»): фон GFC (градиент, звёзды); вверху крупный заголовок GFC.headline с мыслью фразы (Montserrat 800 капсом, главное
+ * слово золотом); соты — цветные плитки (бирюза → небо → фиалка → коралл → золото), в них кремовые фигурки, как в конце
+ * gfc_crowd/order; хаос — цветные точки; огонь порядка — золотое солнце GFC.spark с лучами; нити от огня — градиентные
+ * (золото → цвет плитки) с бегущими искрами; под сценой фиолетовые холмы GFC.ground (есть земля — на ней стоит тело);
+ * тело — фиалковое с золотыми сотами в груди (как gfc_body); счётчик дней — цветные значки GFC.node с цифрами (бирюза,
+ * небо, розовый, зелёный) под вторым заголовком, а не моно-надпись ДЕНЬ 1·2·3·4 внизу; «честным» — над сотами всплывают
+ * значки честных поступков (сердце, весы, плюс, звезда; без коралла — тёмный коралл читается красным). Красного нет.
+ * Раскладка daily — под заголовок: заголовок y≈36..101, огонь (210,114, r 10), соты ×1,06 (центр 210,238, y≈140..336,
+ * x≈94..326 — на всю ширину вместе с телом), тело — слева (x 48, рост 160, ноги на холмах y 300).
  *
- * Часть 1 (вход наплывом 0,5 с из gfc_crowd/order — его делает GFC.scene; соты 6×6 с фигурками и огонь над ними — как там):
- *  daily (a10 = a09 от «Но»)  «Но» — соты вырастают на всю ширину (×1,15, центр 210,196), огонь над ними (210,60), тёплые
- *               нити от огня к верхнему ряду; «теле» — слева крупный фиалковый человек (рост 150) с золотыми сотами в
- *               груди; «не» (не собрать) — краевые плитки гаснут, фигурки и рёбра разлетаются цветными точками далеко
- *               и дрожат, края тела осыпаются, к «навсегда» — сильнее; «собираем» — края собираются, внизу крупный
- *               счётчик ДЕНЬ 1 (20/24, золотые цифры); «каждый» — ·2, «день» — ·3, дальше через 0,5 с — ·4: каждый день
- *               половина краевых сот осыпается и собирается обратно.
- *  past (a11)   «А» — счётчик и тело уходят, огонь улетает вверх за кадр, соты отходят влево (центр 150,192);
- *               «откуда» — справа от сот крупный золотой «?» (96); «порядок» (v15: «А откуда взялся сам порядок?»; до
- *               переозвучки — доля после «взялся») — соты вспыхивают золотом, под ними печатается ПОРЯДОК (18);
- *               «религии» — «?» гаснет, соты сжимаются (×0,62) в центр над линией, полоса прорисовывается слева направо;
- *               «дан» — огонь сразу падает сверху по тёплому лучу на соты, волна, нити к верхнему ряду; «Бог» — огонь
- *               с сотами уходит в начало линии, «начале» — садится, вспышка и волна; «сотворил» — кольцо цветных
- *               точек-мира, СОТВОРИЛ МИР; «дал» — ДАЛ ЗАКОН, волна; «будущее» — тёплые точки летят от огня и к «руках»
- *               собираются в две ладони над будущим отрезком линии, в ладонях — тёплый свет, отрезок под ним тёплый.
- *  flip (a12)   «дальше» — ладони тише; «взгляд» — отметка СЕЙЧАС; «будущее» — отрезок от СЕЙЧАС к концу загорается;
- *               «наших» — у СЕЙЧАС проявляется человек (коралл), к «руках» поднимает бирюзовую соту, подписи у огня тише;
- *               «не» (не в начале) — старый огонь в ПРОШЛОМ гаснет вместе с миром и ладонями, из него по линии в конец
- *               едет огонёк; «конце» — огонёк входит в пустой пунктирный контур, волна; «сложится» — сота человека
- *               улетает в контур (в контуре — пустые гнёзда); «порядка» — с линии прошлого взлетают три цветные соты и
- *               встают в гнёзда; «мы» — второй человек (небо) с фиалковой сотой, «собираем» — первый поднимает новую
- *               соту, оба идут к контуру; «религии» — над началом линии карандашный набросок сот, «черновик» — крупно
- *               встаёт ЧЕРНОВИК (18, со вспышкой); «работы» — стрелка к ровным цветным сотам над концом (две ячейки
- *               пустые); «собирают» — сота второго встаёт в гнездо; «второй» — по линии в контур бежит огонёк, контур
- *               вспыхивает. С K.card − 0,5 рисунок тускнеет до 40 % — под карточку ЧАСТЬ 2 (story.py).
- * Часть 2 (первый кадр без наплыва — сразу целый; хук ленты; линия всё время в движении: по ней бегут огоньки,
- *          контур дышит и мерцает):
- *  notyet (b01) «ЕСТЬ ЛИ БОГ?» (34) печатается с первого кадра; «бог» — волна от контура; «рэй» — подпись GFC.thinker
- *               «РЭЙ КУРЦВЕЙЛ · «TRANSCENDENT MAN» · 2009» (12); «ответил» — по линии в контур бежит огонёк;
- *               «пока» — крупно «ПОКА» (46), «нет» — встаёт золотое «НЕТ.» со вспышкой, контур вздрагивает волной.
- *  idea (b02)   «шутка» — «ПОКА» подчёркивается, контур вспыхивает; «идея» — огонёк в контур, в контуре проступают
- *               пустые гнёзда; «религиях» — вопрос и ответ гаснут; «бог» (1-е) — огонь падает сверху в начало линии,
- *               садится к «начале»; «сотворил» — кольцо мира и СОТВОРИЛ МИР; «будущее» — ладони из тёплых точек над
- *               будущим (как в части 1), «руках» — свет в ладонях; «идее» — ладони гаснут, огонь и подпись тише;
- *               «конце» — контур ярче, в нём пустые гнёзда, волна; «собирают» — три человека (бирюза, фиалка, коралл)
- *               с цветными сотами над головой идут к контуру, передний ставит соту в центр контура, на «Его» — средний,
- *               на «люди» — задний (каждый раз волна). Поза держится — из неё наплывает gfc_omega/tree.
- * Слова-основы GFC.w — те же, что у gf_line (сверены со словами cues.json 05.11, текст v15): a10 — теле, не, навсегда,
- *   собираем, каждый, день; a11 — откуда, взялся, порядок, религии, дан, бог, начале, сотворил, дал, будущее, руках;
- *   a12 — дальше, взгляд, будущее, наших, руках, не (2-е), конце, сложится, порядка, мы, собираем, религии, черновик,
- *   работы, собирают, второй; b01 — бог, рэй, ответил, пока, нет; b02 — шутка, идея, религиях, бог, начале, сотворил,
- *   будущее, руках, идее, конце, собирают, его (2-е), люди.
- * Параметры p: s (фраза), mode, K (cues.json части), prev/prev_mode (наплыв — GFC.scene). Камера движка нейтральна.
- * Важное — в y=20..345 (низ кадра пуст под субтитры). Свои id в SVG: gfcl-rev (прорисовка линии), gfcl-fut (отрезок
- * будущего). Экспорта для соседей нет (gf_line тоже ничего не экспортирует).
+ *  daily (a10 = a09 от «Но»; v21: «Но, как в теле, этот порядок не собрать навсегда: мы собираем его каждый день — каждым
+ *               честным поступком.»)
+ *               вход — наплыв 0,5 с из gfc_crowd/order (его делает GFC.scene): соты 6×6 с фигурками ×1 (центр 180,240,
+ *               r 19,5), огонь (180,88, r 8), нити от огня к верхнему ряду;
+ *               «Но» — огонь уходит под место заголовка (210,114), соты вырастают на всю ширину (×1,06, центр 210,238),
+ *               проявляются холмы; нити становятся градиентными, по ним бегут искры; +0,6 с — заголовок
+ *               «ПОРЯДОК / НЕ НАВСЕГДА» (до «мы»);
+ *               «теле» — слева проявляется крупное фиалковое тело с золотыми сотами в груди;
+ *               «порядок» — по сотам от центра бежит золотая волна;
+ *               «не» (не собрать) — краевые плитки гаснут, фигурки и рёбра разлетаются цветными точками и дрожат, края тела
+ *               осыпаются, к «навсегда» — сильнее;
+ *               «мы» — заголовок в одну строку «КАЖДЫЙ ДЕНЬ ЗАНОВО» (до «поступком»);
+ *               «собираем» — края собираются, под заголовком цветной значок «1» (счётчик дней); «каждый» — «2», «день» —
+ *               «3», «каждым» — «4» (каждый значок выскакивает с отскоком и вспышкой): каждый день половина краевых сот
+ *               осыпается и собирается обратно;
+ *               «честным» — в каждой соте по очереди тёплая вспышка, над девятью сотами всплывают и гаснут цветные значки
+ *               поступков (сердце, весы, плюс, звезда);
+ *               «поступком» — золотая волна от центра, огонь вспыхивает с кольцом, заголовок, тело, счётчик и холмы гаснут,
+ *               соты и огонь возвращаются в позу gfc_crowd/order: соты 6×6 ×1 (центр 180,240), огонь (180,88, r 8), тонкие
+ *               тёплые нити к верхнему ряду. Эта поза — шов с gfc_law/voltaire (c10, вход наплывом).
+ *  past (a11), flip (a12), notyet (b01), idea (b02) — как в шапке gf_line.js (перенос прежней цветной версии, вид v1).
+ * Слова-основы GFC.w — те же, что у gf_line (сверены с eps/god_future_color_p1/build/cues.json, текст v21, 06.11): a10 —
+ *   теле, порядок, не, навсегда, мы, собираем, каждый, день, каждым, честн, поступк (нет слова — события нет, кроме
+ *   «теле», «не», «навсегда», «собираем», «каждый», «день» — у них доля фразы, как в gf_line); a11 — откуда, взялся,
+ *   порядок, религии, дан, бог, начале, сотворил, дал, будущее, руках; a12 — дальше, взгляд, будущее, наших, руках,
+ *   не (2-е), конце, сложится, порядка, мы, собираем, религии, черновик, работы, собирают, второй; b01 — бог, рэй, ответил,
+ *   пока, нет; b02 — шутка, идея, религиях, бог, начале, сотворил, будущее, руках, идее, конце, собирают, его (2-е), люди.
+ * Одна непрерывная линия времени на часть: картинка зависит только от t и K, p.mode — лишь имя кадра. Часть — по K.
+ * Параметры p: s, mode, K (cues.json части), prev/prev_mode (наплыв — GFC.scene). Камера движка нейтральна.
+ * Важное — в y=20..345 (низ кадра — под субтитры), подписи — не выше базовой линии y 46 (верх закрывает интерфейс Reels):
+ * заголовок — базовая линия 52. Свои id в SVG: gfcl-rev (прорисовка линии), gfcl-fut (отрезок будущего), gfcl-th0..5
+ * (градиенты нитей). Экспорта для соседей нет.
  * Проверка (станция tesla): ANIM_TEMPLATE=$HOME/Projects/anim-template-god python3 <serial-studio>/tools/remote_anim.py
- *   god_future_color_p1 --pull eps/god_future_color_p1/qa/line.jpg -- bash -c "python eps/god_future_color_p1/story.py &&
- *   python render.py --story eps/god_future_color_p1/build/story.json --at 64.5,66,… --sheet eps/god_future_color_p1/qa/line.jpg"
+ *   god_future_color_p1 -- render.py --story eps/god_future_color_p1/build/story.json --at 69.4,71.4,… --sheet
+ *   eps/god_future_color_p1/qa/gfc_line_<метка>.jpg
  */
 (() => {
   const f = v => Number(v).toFixed(2);
@@ -80,10 +67,15 @@
   const DRX = 84, DRY = 92, DR = 21, CLX = 272;
   // a10 comb (as gfc_crowd/order ends: the comb, the fire of order above it)
   const CX = 180, CY = 240, CR = 19.5, COLS = 6, ROWS = 6, SX0 = 180, SY0 = 88, SR0 = 8;
-  const DZ = 1.15, DCX = 210, DCY = 196, DFX = 210, DFY = 60;   // daily: the comb on the whole width, the fire above it
+  // daily (v2): the comb grows to the whole width under the headline, the fire above it (between the headline and the comb)
+  const DZ = 1.06, DCX = 210, DCY = 238, DFX = 210, DFY = 114, DFR = 10;
   const QZ = 1, QCX = 150, QCY = 192, QMX = 300, QMY = 230;   // a11: the comb next to a big «?»
   const RZ = .62, RCX = 180, RCY = 178, RFY = 104;              // a11 «религии … дан свыше»: the fire lands above the comb
-  const DAYX = 100, DAYY = 340;                                 // the day counter under the comb
+  const DAYC = 210, DAYY = 84, DNR = 15, DNS = 40;              // the day counter under the 2nd headline: centre, y, node r, step
+  const HL = { y: 52, size: 22, big: 1.45 };                    // the 1st headline: first baseline 52 (not above 46), bottom ≈ 94
+  const HL2 = { y: 58, size: 22, big: 1.45, maxW: 326 };        // the 2nd: one line (shrinks to 326), the day nodes under it
+  const FFM = 'GFCMont, Mont, sans-serif';
+  const HILLY = 300;                                            // the horizon of the hills (the body stands on it)
   const HCX = 250, HCY = 236, HS = 1.9;                         // the palms over the future part of the line
   // draft phrase bounds only for scene_test without K (real proportions of the voice of 05.11)
   const DEF = { a10: [0, 5.28], a11: [5.28, 14.14], a12: [14.69, 28.4], b01: [0.05, 4.06], b02: [4.46, 15.4] };
@@ -114,7 +106,17 @@
 
   function cues1(K) {
     const c = {};
-    [c.s10, c.e10] = span(K, 'a10'); [c.s11, c.e11] = span(K, 'a11'); [c.s12, c.e12] = span(K, 'a12');
+    // текст v21 (как gf_line): за a10 в части 1 идёт c10 (gfc_law), фраз a11/a12 нет — их события уходят за конец ролика
+    // (не наступают), а не на черновые доли DEF (иначе в daily сразу видна поза конца flip)
+    const solo = K.a10 != null && K.a11 == null && K.a12 == null;
+    const sp = id => solo && id !== 'a10' ? [1e6, 1e6 + 3] : span(K, id);
+    const W = (K2, id, stem, share, n = 0) => {
+      if (hasW(K2, id, stem, n)) return GFC.w(K2, id, stem, n);
+      const [a, b] = sp(id);
+      return a + share * (b - a);
+    };
+    const W10 = stem => hasW(K, 'a10', stem, 0) ? GFC.w(K, 'a10', stem) : 1e6;   // v21-слова a10: нет слова — нет события
+    [c.s10, c.e10] = sp('a10'); [c.s11, c.e11] = sp('a11'); [c.s12, c.e12] = sp('a12');
     c.tele = W(K, 'a10', 'теле', .18); c.ne10 = W(K, 'a10', 'не', .37); c.nav = W(K, 'a10', 'навсегда', .53);
     c.sob = W(K, 'a10', 'собираем', .71); c.kazh = W(K, 'a10', 'каждый', .83); c.den = W(K, 'a10', 'день', .9);
     c.otk = W(K, 'a11', 'откуда', .02); c.vzl = W(K, 'a11', 'взялся', .06);
@@ -130,8 +132,13 @@
     c.cher = W(K, 'a12', 'черновик', .77); c.rab = W(K, 'a12', 'работы', .81); c.sobt = W(K, 'a12', 'собирают', .89);
     c.vtor = W(K, 'a12', 'второй', .94);
     if (c.kon < c.ne12 + .8) c.kon = c.ne12 + .8;
-    // day ticks: «собираем», «каждый», «день», then every .5 s until the phrase ends (at most 4 days)
+    // v21: «этот порядок» — волна; «мы» — второй заголовок; «каждым» — день 4; «честным» — тёплые вспышки в сотах;
+    // «поступком» — назад в позу шва
+    c.por10 = W10('порядок'); c.my10 = W10('мы'); c.kazh2 = W10('каждым'); c.chest = W10('честн'); c.post = W10('поступк');
+    if (c.my10 > 1e5) c.my10 = c.sob - .3;
+    // day ticks: «собираем», «каждый», «день», «каждым» (without it — every .5 s until the phrase ends; at most 4 days)
     c.days = [c.sob, c.kazh, c.den];
+    if (c.kazh2 < 1e5) c.days.push(c.kazh2);
     for (let x = c.den + .5; x < c.s11 - .15 && c.days.length < 4; x += .5) c.days.push(x);
     // the fire falls from above onto the comb on «дан (свыше)», then on «Бог — в начале» takes it into the start of the line
     c.bog11 = W(K, 'a11', 'бог', .4); c.land1 = c.dan + .5;
@@ -384,6 +391,13 @@
     return v;
   }
   const crumble = (i, t, c) => isEdge(i) ? crumbleAt(t, c, H(i * 5 + 1), i) : 0;
+  // «честным»: the start of the deed of cell i and its flash 0..1 (as gf_line)
+  const deedT = (c, i) => c.chest + H(i * 3 + 7) * .55;
+  const deed = (t, c, i) => pulse(t, deedT(c, i), .1, .65);
+  // the cells whose deed rises as an icon node above them: cell, icon
+  // colours: pink, teal, sky, green, violet — no coral (the dark coral reads as red; red is only for danger)
+  const DEEDS = [[1, 'heart', 'pink'], [4, 'scales', 'teal'], [8, 'plus', 'green'], [13, 'heart', 'sky'], [16, 'star', 'violet'],
+    [21, 'scales', 'sky'], [26, 'heart', 'pink'], [29, 'plus', 'teal'], [33, 'scales', 'green']];
   const PGY = 12.5, PHC = 25;                                      // the cream figure in a tile (as gfc_crowd/order)
   const PPTS = LAT.map((c, i) => GFC.personPts(c[0], c[1] + PGY, PHC, 22, i + 1));
   const FCOL = LAT.map((_, i) => GFC.mixC(GFC.PAL[Math.floor(H(i * 3.7 + 1) * 5)][0], '#fff3e2', .82));
@@ -394,10 +408,13 @@
     let fl = '';
     LAT.forEach((cc, i) => {
       const cr = CRS[i], [x, y] = cc;
-      // the figure of the cell (as gfc_crowd/order): fades as its cell crumbles and comes back
-      if (cr < .97) s += GFC.person(x, y + PGY, PHC, { color: FCOL[i], t, opacity: 1 - cr, shadow: .5, seed: i + 1 });
-      // «порядок»: a golden wave from the centre outwards
-      const k = flash * clamp(1.4 - Math.hypot(x - CX, y - CY) / 110) * (1 - cr);
+      // «честным (поступком)»: a warm flash in each cell in turn — the deed of its person (v21)
+      const dd = deed(t, c, i);
+      if (dd > .003) fl += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(CR * 1.6)}" fill="url(#gfc-halo)" opacity="${f(dd)}"/>`;
+      // the figure of the cell (as gfc_crowd/order): fades as its cell crumbles and comes back; lit by its deed
+      if (cr < .97) s += GFC.person(x, y + PGY, PHC, { color: FCOL[i], t, opacity: 1 - cr, shadow: .5, seed: i + 1, lit: dd });
+      // «порядок»: a golden wave from the centre outwards; the deed — a warm golden rim on the tile
+      const k = Math.max(flash * clamp(1.4 - Math.hypot(x - CX, y - CY) / 110), .9 * dd) * (1 - cr);
       if (k > .02) fl += GFC.hex(x, y, CR * .9, { op: k, w: 2.6, color: ACC, glow: true, fill: `rgba(255,236,170,${f(.4 * k)})`, shade: false });
       if (cr <= .003) return;
       const al = Math.min(1, cr * 3);
@@ -420,14 +437,15 @@
     return s + fl + GFC.dots(P, { r: 1.5, op: .97, t, glow: .5, alpha: i => A[i], color: i => C[i] });
   }
   // «как и в теле»: a big flat body with golden cells in the chest (as gfc_body), its edges crumble and gather with the comb
-  const BX = 46, BG = 300, BH = 150;
+  const BX = 48, BG = HILLY, BH = 160;
   const BODY = GFC.personPts(BX, BG, BH, 190, 5).filter((_, k) => H(k * 7 + 3) > .42);
   const BCOL = ['#eba2ff', '#ffffff', '#c58cff'];
   function body(t, c, op) {
     if (op <= .003) return '';
     const cr0 = crumbleAt(t, c, .3, 41);
-    let s = GFC.person(BX, BG, BH, { color: 'violet', t, opacity: 1 - .45 * cr0, seed: 5, shadow: .6 });
-    s += GFC.comb(BX, BG - BH * .55, 6, 3, 3, { grid: .3, gap: .9, lit: () => 1 - .6 * cr0, color: i => ['#ffe27a', '#ffb547', '#ffd36b'][i % 3] });
+    let s = GFC.person(BX, BG, BH, { color: 'violet', t, opacity: 1 - .45 * cr0, seed: 5, shadow: .7 });
+    s += `<circle cx="${BX}" cy="${f(BG - BH * .55)}" r="30" fill="url(#gfc-halo)" opacity="${f(.85 * (1 - .6 * cr0))}"/>`;
+    s += GFC.comb(BX, BG - BH * .55, 6.8, 3, 3, { grid: .3, gap: .9, lit: () => 1 - .6 * cr0, color: i => ['#ffe27a', '#ffb547', '#ffd36b'][i % 3] });
     const P = [], A = [];
     BODY.forEach((p, k) => {
       const cr = crumbleAt(t, c, H(k * 3 + 2) * .6, 40 + (k % 9));
@@ -444,44 +462,82 @@
   function part1(t, K) {
     const c = cues1(K);
     let s = '';
-    // the comb: grows to the whole width after «Но», steps left for the «?» on «А», on «религии» shrinks to the centre
-    // above the line (the fire falls onto it on «дан свыше»), on «Бог — в начале» goes with the fire into the start
-    const zq = qq(t, c.s10 + .3, c.s10 + 1.3), aq = qq(t, c.s11 - .05, c.s11 + .7), rq = qq(t, c.rel - .05, c.rel + .8);
+    // the comb: after «Но» steps right under the headline (×1.02, centre 212,214), steps left for the «?» on «А», on
+    // «религии» shrinks to the centre above the line (the fire falls onto it on «дан свыше»), on «Бог — в начале» goes
+    // with the fire into the start; «поступком» (v21): back to the pose of gfc_crowd/order — the seam with gfc_law/voltaire
+    const back = qq(t, c.post - .05, c.post + .85);
+    const zq = qq(t, c.s10 + .3, c.s10 + 1.3) * (1 - back), aq = qq(t, c.s11 - .05, c.s11 + .7), rq = qq(t, c.rel - .05, c.rel + .8);
+    const fq = qq(t, c.s10 + .05, c.s10 + .75) * (1 - back);   // the fire rises first: it leaves the headline's place
     const mv = qq(t, c.mv0, c.land);
     let z = lerp(1, DZ, zq), tx = lerp(CX, DCX, zq), ty = lerp(CY, DCY, zq);
     z = lerp(z, QZ, aq); tx = lerp(tx, QCX, aq); ty = lerp(ty, QCY, aq);
     z = lerp(z, RZ, rq); tx = lerp(tx, RCX, rq); ty = lerp(ty, RCY, rq);
     z = lerp(z, .08, mv); tx = lerp(tx, FX, mv); ty = lerp(ty, LY - 6, mv);
     const cop = 1 - qq(mv, .55, 1);
+    // v2 look of daily (0 at both seams): the hills, the gradient threads with sparks
+    const vk = zq * (1 - aq);
+    // the hills under the scene (the body stands on them): with the comb after «Но», gone on «поступком» and on «А»
+    const hillOp = q(t, c.s10 + .3, .8) * (1 - back) * (1 - aq);
+    if (hillOp > .003) s += GFC.ground({ y: HILLY, op: hillOp, warm: .25, seed: 3 });
     // the fire: above the comb (daily) → flies up out of the frame on «А» («откуда?») → falls at once from above along a
     // beam onto the comb on «дан (свыше)» → with the comb into the start of the line on «Бог — в начале» → a flare and a
-    // wave there → goes out on «не в начале» (a12)
+    // wave there → goes out on «не в начале» (a12); «поступком» — a flare and back to (180,88)
     const up = qq(t, c.s11 - .05, c.s11 + .7), fall = qq(t, c.dan - .1, c.land1), gone = qq(t, c.ne12 - .05, c.ne12 + .45);
     let fx, fy, fr, fop = 1, beam = 0;
-    if (t < c.dan - .1) { fx = lerp(SX0, DFX, zq); fy = lerp(lerp(SY0, DFY, zq), -70, up); fr = lerp(SR0, 10, zq); }
+    if (t < c.dan - .1) { fx = lerp(SX0, DFX, fq); fy = lerp(lerp(SY0, DFY, fq), -70, up); fr = lerp(SR0, DFR, fq) * (1 + .45 * pulse(t, c.post, .15, .8)); }
     else {
       const a = (1 - mv) ** 2, b = 2 * mv * (1 - mv), e = mv * mv;
       fx = a * RCX + b * 70 + e * FX; fy = a * lerp(-30, RFY, fall) + b * 150 + e * LY;
       fr = lerp(10, FR, mv) * (1 + .35 * pulse(t, c.land, .12, .7)) * (1 - .6 * gone);
       fop = 1 - gone; beam = q(t, c.dan - .15, .2) * (1 - qq(t, c.land1 - .05, c.land1 + .5));
     }
-    // threads from the fire to the top row of the comb (daily; and again when the fire has come down onto it)
+    // threads from the fire to the top row of the comb (daily; and again when the fire has come down onto it): at the seams
+    // thin warm lines (as gfc_crowd/order), in daily — gradient gold → the colour of the tile, sparks run down them
     const th = Math.max((1 - up) * (1 - aq), q(t, c.land1 - .1, .3) * (1 - mv)) * cop;
-    if (th > .003) for (let i = 0; i < COLS; i++) {
-      const p = [tx + (LAT[i][0] - CX) * z, ty + (LAT[i][1] - CR - CY) * z];
-      s += GFC.thread([fx, fy + 8], p, { opacity: (.3 + .08 * Math.sin(t * 1.3 + i)) * th, width: .9, color: SUN });
+    if (th > .003) {
+      let defs = '';
+      for (let i = 0; i < COLS; i++) {
+        const a = [fx, fy + 8], p = [tx + (LAT[i][0] - CX) * z, ty + (LAT[i][1] - CR - CY) * z];
+        s += GFC.thread(a, p, { opacity: (.3 + .08 * Math.sin(t * 1.3 + i)) * th * (1 - .6 * vk), width: .8, color: WARM });
+        if (vk * th > .003) {
+          const id = `gfcl-th${i}`, k = vk * th;
+          defs += `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${f(a[0])}" y1="${f(a[1])}" x2="${f(p[0])}" y2="${f(p[1])}">` +
+            `<stop offset="0" stop-color="${SUN}"/><stop offset="1" stop-color="${TCOL[i]}"/></linearGradient>`;
+          const ln = (w, o, soft) => `<line x1="${f(a[0])}" y1="${f(a[1])}" x2="${f(p[0])}" y2="${f(p[1])}" stroke="url(#${id})" stroke-width="${w}" stroke-linecap="round" opacity="${f(o)}"${soft ? ' filter="url(#gfc-soft)"' : ''}/>`;
+          s += ln(4, .3 * k, true) + ln(1.4, .85 * k, false);
+          const u = ((t * .55 + H(i * 9 + 2)) % 1 + 1) % 1, sk = k * Math.sin(Math.PI * u);
+          const px = lerp(a[0], p[0], u), py = lerp(a[1], p[1], u), col = GFC.mixC(SUN, TCOL[i], u);
+          s += `<circle cx="${f(px)}" cy="${f(py)}" r="4.2" fill="${col}" opacity="${f(.35 * sk)}" filter="url(#gfc-soft)"/>` +
+            `<circle cx="${f(px)}" cy="${f(py)}" r="1.8" fill="#fffbe8" opacity="${f(sk)}"/>`;
+        }
+      }
+      if (defs) s = `<defs>${defs}</defs>` + s;
     }
-    if (cop > .003) s += `<g opacity="${f(cop)}">${GFC.zoom(comb(t, c, pulse(t, c.por11 - .05, .15, 1.1)), CX, CY, z, tx, ty)}</g>`;
-    // «как и в теле»: the body at the left (gone on «А»)
-    s += body(t, c, q(t, c.tele - .1, .5) * (1 - qq(t, c.s11 - .05, c.s11 + .5)));
-    // the day counter under the comb: ДЕНЬ 1 · 2 · 3 …, the new number pops and glows
-    const dayN = c.days.filter(x => t >= x).length, dop = (1 - qq(t, c.s11 - .05, c.s11 + .45)) * q(t, c.sob - .05, .25);
+    // «порядок» (a11; v21 — a10 «этот порядок»), «поступком» — a golden wave over the comb from the centre
+    const flash = Math.max(pulse(t, c.por11 - .05, .15, 1.1), pulse(t, c.por10 - .05, .15, 1.1), pulse(t, c.post, .15, 1.1));
+    if (cop > .003) s += `<g opacity="${f(cop)}">${GFC.zoom(comb(t, c, flash), CX, CY, z, tx, ty)}</g>`;
+    // «честным»: icon nodes of honest deeds rise from nine cells and fade (in the screen place of the cell)
+    for (const [i, icon, col] of DEEDS) {
+      const a = deedT(c, i), k = q(t, a, .22) * (1 - qq(t, a + .55, a + .9)) * cop;
+      if (k <= .003) continue;
+      const x = tx + (LAT[i][0] - CX) * z, y = ty + (LAT[i][1] - CY) * z - 4 - 16 * qq(t, a, a + .9);
+      s += GFC.node(x, y, 12.5 * z, icon, { color: col, op: k, scale: .4 + .6 * q(t, a, .22) + .18 * pulse(t, a + .12, .1, .25) });
+    }
+    // «как и в теле»: the body at the left (gone on «А»; v21 — on «поступком»)
+    s += body(t, c, q(t, c.tele - .1, .5) * (1 - qq(t, c.s11 - .05, c.s11 + .5)) * (1 - back));
+    // the day counter (v2: under the 2nd headline «Каждый день заново», not under the comb): colour number nodes
+    // 1 · 2 · 3 · 4 on «собираем», «каждый», «день», «каждым», the new one pops with a glow
+    const dayN = c.days.filter(x => t >= x).length;
+    const dop = (1 - qq(t, c.s11 - .05, c.s11 + .45)) * q(t, c.sob - .05, .25) * (1 - qq(t, c.post - .05, c.post + .3));
     if (dayN > 0 && dop > .003) {
-      let g = GFC.mono(DAYX, DAYY, 'ДЕНЬ', { size: 20, anchor: 'start', ls: .04, opacity: 1 });
+      const n = Math.max(4, c.days.length), x0 = DAYC - (n - 1) * DNS / 2;
+      let g = '';
       for (let k = 0; k < dayN; k++) {
-        const x = DAYX + 86 + k * 38, a = c.days[k], fl = pulse(t, a, .06, .5);
-        if (k) g += GFC.mono(x - 19, DAYY, '·', { size: 22, anchor: 'middle', color: WARM, opacity: .85 });
-        g += GFC.zoom(GFC.mono(x, DAYY, String(k + 1), { size: 26, anchor: 'middle', color: ACC, opacity: 1, glow: fl > .15 }), x, DAYY - 9, 1 + .7 * (1 - qq(t, a, a + .3)));
+        const x = x0 + k * DNS, a = c.days[k], d = String(k + 1);
+        const sc = q(t, a - .02, .18) * (1 + .3 * pulse(t, a + .1, .08, .3));
+        const ic = `<text y="9.6" font-family="${FFM}" font-weight="800" font-size="23" text-anchor="middle" fill="${INK}" opacity=".35">${d}</text>` +
+          `<text y="8.2" font-family="${FFM}" font-weight="800" font-size="23" text-anchor="middle" fill="#fff">${d}</text>`;
+        g += GFC.node(x, DAYY, DNR, ic, { color: GFC.pick(k + 1), scale: sc, glow: 1 + 1.5 * pulse(t, a, .06, .5) });
       }
       s += `<g opacity="${f(dop)}">${g}</g>`;
     }
@@ -499,7 +555,7 @@
     s += tline(t, rev, now, fut);
     // the world, the fire and its labels at the start of the line
     s += world(FX, LY, q(t, c.sotv, .9) * (1 - qq(t, c.ne12, c.ne12 + .6)), t);
-    if (fop > .003 && fy > -60) s += fire(fx, fy, fr, fop, t, beam, wave(t, [c.land1, c.land, c.dal]));
+    if (fop > .003 && fy > -60) s += fire(fx, fy, fr, fop, t, beam, wave(t, [c.post, c.land1, c.land, c.dal]));
     s += tlabels(rev, now);
     const lab = 1 - .45 * qq(t, c.nash - .3, c.nash + .3) - .3 * qq(t, c.ne12, c.ne12 + .6);
     s += `<g opacity="${f(lab)}">` + GFC.typed(LBX, LBY1, 'СОТВОРИЛ МИР', t, c.sotv, { size: LBS, anchor: 'start', ls: .03, color: WARM }) +
@@ -562,6 +618,10 @@
     s += clean(CLX, DRY, DR, qq(t, c.rab + .2, c.rab + 1.3), 1, t, [2, 5]);
     // «во второй части»: a light runs from «СЕЙЧАС» into the contour
     s += comet(qq(t, c.vtor - .1, c.vtor + .75), NOWX);
+    // v2: the headline of daily — the thought of the phrase, not the subtitle: «Порядок не навсегда» from «Но» (+.6 s, when
+    // the fire has left its place) to «мы»; «Каждый день заново» from «мы» to «поступком» (the seam pose has no headline)
+    s += GFC.headline('Порядок / *не навсегда*', t, c.s10 + .6, c.my10 + .05, HL);
+    s += GFC.headline('Каждый день *заново*', t, c.my10 + .15, Math.min(c.post + .3, c.s11 + .2), HL2);
     // the card ЧАСТЬ 2 (story.py) comes on a quieter picture
     const dim = K.card != null ? 1 - .6 * qq(t, K.card - .5, K.card + .3) : 1;
     return dim < .999 ? `<g opacity="${f(dim)}">${s}</g>` : s;

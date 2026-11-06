@@ -1,8 +1,41 @@
 /* gfc_00_lib — «Бог ещё не создан», альтернативная версия в дизайне «Цветная инфографика» (выбор владельца 05.11 по пробе
- * engine/scenes/gfx_flatcolor.js → eps/god_future/qa/style_flatcolor.jpg): общий словарь рисунков window.GFC, v1.
+ * engine/scenes/gfx_flatcolor.js → eps/god_future/qa/style_flatcolor.jpg): общий словарь рисунков window.GFC, v2 (GFC.version).
  * Ролики: eps/god_future_color_p1, eps/god_future_color_p2 (сцены gfc_* = сцены gf_* основной версии, перерисованные).
+ *
+ * v2 (06.11, владелец о цветной части 1: «графика всё же не как на предложенной картинке, цветов мало») — ближе к образцу:
+ *   крупный заголовок сверху, разноцветные люди и значки, холмы под сценой, фон теплее вверху. Всё v1 обратно совместимо
+ *   (сигнатуры прежние; прежние сцены рисуются как раньше, кроме фона: верх кадра насыщеннее и теплее — розово-фиолетовый).
+ *   GFC.headline(text, t, t0, t1=null, o) — заголовок, как «ЗАЧЕМ ЛЮДЯМ / БОГИ?» в образце: строки через «/», *слово* — акцент
+ *     (золото GFC.GOLD #ffc94a, в o.big=1.5 раза крупнее, тёплое свечение). Montserrat 800 капсом, белый, мягкая тень.
+ *     o.y=70 — базовая линия первой строки (выше 50 не ставится: верх кадра закрывает интерфейс Reels), o.size=26, o.big=1.5,
+ *     o.maxW=300 (строка шире ужимается целиком), o.x=180, o.gap=.5 (межстрочный зазор в кеглях), o.ls=.02, o.color='#fff',
+ *     o.accent, o.glow=1, o.op, o.caps=true. Появляется с t0: подъём на 8 и проявление за o.dur=.3 с, строки — через
+ *     o.stagger=.1 с; гаснет к t1 (за .35 с; null — не гаснет).
+ *       s += GFC.headline('Зачем людям / *боги?*', t, GFC.T(K, 'p1'), GFC.TE(K, 'p1'));
+ *       s += GFC.headline('Чай *остывает*', t, 3, 6, { y: 64, size: 24 });
+ *   GFC.headBox(text, o) → {y0, y1, lines:[{y, size, w, segs}]} — где встанет заголовок (y0 — верх букв, y1 — низ):
+ *     ставить крупный объект сразу под ним, без пустоты: GFC.headBox('Зачем людям / *боги?*').y1 ≈ 120.
+ *   GFC.ground(o) / GFC.hills(o) — фиолетовые холмы и горизонт под сценой (дальние и средние гребни со светлым кантом, тёмная
+ *     земля до маски субтитров, по бокам мягко гаснут): o.y=300 — линия горизонта, o.op=1, o.glow=1 — мягкий свет над
+ *     горизонтом, o.warm — тёплый отсвет огня на земле, o.far=1 / o.mid=1 — дальние / средние гребни (0 — без них), o.seed.
+ *     Прежний вызов GFC.ground(cx, y, rx, ry, o) — площадка под людьми, как в v1. Ставить первым (под людьми):
+ *       let s = GFC.ground({ y: 262, warm: .5 }); s += GFC.person(180, 300, 90, { seed: 3 });
+ *   GFC.node(x, y, r, icon, o) — цветной кружок со значком (как клетка/рыба/человек на ветвях образца): градиент цвета,
+ *     светлая обводка, блик, мягкое свечение и тень. icon — имя из GFC.ICONS: book, heart, scales, star, leaf, drop, plus,
+ *     question, flame, human, cell, fish, eye; свой SVG (строка с «<», поле ±10 при r=16); короткий текст ('150', '1', '?').
+ *     o.color (номер или имя PAL, или цвет-строка; без него — по o.seed, как у людей), o.seed=1, o.op, o.scale=1 (появление —
+ *     0→1), o.glow=1, o.shadow=1, o.ring=1, o.ink='#fff' (цвет значка).
+ *       s += GFC.node(120, 200, 17, 'heart', { color: 'pink', scale: GFC.q(t, t0, .35) });
+ *   Палитра: GFC.PAL — [светлый, тёмный] × 7: 0 коралл, 1 бирюза, 2 небо, 3 фиалка, 4 золото (как v1), 5 розовый, 6 зелёный;
+ *     имена — GFC.NAME ('coral' … 'pink', 'green'), готовые заливки url(#gfc-p0)…url(#gfc-p6). GFC.pick(seed) → номер цвета
+ *     для людей и значков по кругу GFC.CROWD (коралл, бирюза, небо, розовый, зелёный, фиалка; без золота — оно для «того
+ *     самого»): соседние целые seed — разные цвета.
+ *   GFC.person без o.color — цвет GFC.pick(o.seed): группа с seed 1..n — разноцветная (seed 0 — коралл, как было).
+ *   GFC.dots без o.color — светлые тона всех 7 цветов палитры (GFC.DOT).
+ *   Фильтры v2: url(#gfc-glow3) — мягкое свечение (3,4), url(#gfc-hblur) — тень заголовка (2,4).
+ *   Проверочная сцена gfc_style — три момента образца на v2 (заголовок, холмы, люди, значки) и прежние функции v1.
  * Стиль: тёплый градиентный фон (глубокий фиолетовый → тёмно-синий) со звёздами-точками; плоские люди без лиц (круг-голова,
- * скруглённое тело, 4 цвета: коралл, бирюза, небо, фиалка — и золото для «того самого»); огонь порядка — тёплый
+ * скруглённое тело; v1 — 4 цвета: коралл, бирюза, небо, фиалка — и золото для «того самого», v2 — ещё розовый и зелёный); огонь порядка — тёплый
  * жёлто-оранжевый шар с лучами; подписи — Montserrat 700 капсом с мягкой тенью; мягкие тени под фигурами и плитками.
  * Хаос и порядок — как в GF: цветные точки дрожат и разбредаются; порядок — те же точки в сотах, соты — цветные плитки.
  * Все функции чистые: результат зависит только от аргументов; случайность — GFC.hash. Никаких Math.random/Date.
@@ -44,8 +77,8 @@
  *   o.phase, o.color, o.run=false — без искры); GFC.ground(cx,y,rx,ry,o) — мягкая площадка под людьми (o.op, o.warm —
  *   тёплый отсвет огня); GFC.anchors(cx,groundY,h,o) → {head, top, hands, feet, s} человека; GFC.fs(v) — кегль в зоне;
  *   GFC.textW(text,size,ls) — ширина строки Montserrat 700 (таблица знаков); GFC.mixC(a,b,k), GFC.ramp(u) — цвета;
- *   палитра GFC.PAL ([светлый, тёмный] × 5), GFC.DOT, GFC.RAMP, GFC.INK, GFC.SUN, GFC.ACC.
- * Готовые заливки и фильтры (внутри GFC.wrap): url(#gfc-p0)…url(#gfc-p4) — градиенты палитры, url(#gfc-shade) — светотень
+ *   палитра GFC.PAL ([светлый, тёмный] × 7, v2), GFC.DOT, GFC.RAMP, GFC.INK, GFC.SUN, GFC.ACC.
+ * Готовые заливки и фильтры (внутри GFC.wrap): url(#gfc-p0)…url(#gfc-p6) — градиенты палитры, url(#gfc-shade) — светотень
  *   поверх любой заливки, url(#gfc-halo) — тёплый ореол огня, url(#gfc-glowP) — розово-фиолетовое свечение,
  *   url(#gfc-ball) — шар огня, url(#gfc-shadow) — тень на земле, url(#gfc-ground) — площадка, url(#gfc-time) — полоса
  *   линии времени; фильтры url(#gfc-soft) (свечение 1,25), url(#gfc-blur) (тень 2,2), url(#gfc-tglow) (свечение текста).
@@ -60,8 +93,9 @@
  *   по краям экрана нет чёрных полос; края самой сцены гаснут маской GFC.wrap. runtime.js и storylib не меняются.
  * Кадр 360×640: важное y=20..345 (story.safe ужимает сцену в .72 и ставит в зону), ниже — фон под субтитры.
  * Проверка (станция tesla): ANIM_TEMPLATE=$HOME/Projects/anim-template-god python3 <serial-studio>/tools/remote_anim.py
- *   god_future -- scene_test.py gfc_style '{}' --dur 8 --at 0.5,2,4,6,7.5 --cam '{"z0":1,"z1":1,"drift":0,"kicks":0}'
- *   --out eps/god_future/qa/gfc_style.jpg
+ *   god_future_color_p1 -- scene_test.py gfc_style '{}' --dur 9 --at 1.5,4.5,8 --cam '{"z0":1,"z1":1,"drift":0,"kicks":0}'
+ *   --out eps/god_future_color_p1/qa/gfc_style.jpg (без безопасной зоны); в зоне Reels — render.py --story с одним кадром
+ *   gfc_style и safe/frame из build/story.json ролика: лист v2 — eps/god_future_color_p1/qa/lib_v2_style.jpg
  */
 (() => {
   const WORLD = 'gfc-world';
@@ -111,9 +145,13 @@
   const bare = w => String(w).toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9]/g, '');
 
   /* ---------------- цвета ---------------- */
-  const INK = '#12072e', SUN = '#ffd36b', ACC = '#ffd166', RED = '#ff5a5f';
-  const PAL = Object.freeze([['#ff9d8f', '#e8505b'], ['#63e6d2', '#17998f'], ['#8ccbff', '#3b6fe0'], ['#eba2ff', '#9547d6'], ['#ffe27a', '#ff9a3d']]);
-  const NAME = { coral: 0, teal: 1, sky: 2, violet: 3, gold: 4 };
+  const INK = '#12072e', SUN = '#ffd36b', ACC = '#ffd166', GOLD = '#ffc94a', RED = '#ff5a5f';
+  // [светлый, тёмный]; 0..4 — как в v1 (коралл, бирюза, небо, фиалка, золото), v2 добавил 5 — розовый, 6 — зелёный
+  const PAL = Object.freeze([['#ff9d8f', '#e8505b'], ['#63e6d2', '#17998f'], ['#8ccbff', '#3b6fe0'], ['#eba2ff', '#9547d6'], ['#ffe27a', '#ff9a3d'],
+    ['#ffa6d6', '#e0559a'], ['#95e67c', '#2f9e5e']].map(p => Object.freeze(p)));
+  const NAME = Object.freeze({ coral: 0, teal: 1, sky: 2, violet: 3, gold: 4, pink: 5, green: 6 });
+  const CROWD = Object.freeze([0, 1, 2, 5, 6, 3]);           // цвета людей и значков по seed: без золота (золото — «тот самый»)
+  const pick = (seed = 0) => { const k = Number.isInteger(+seed) ? +seed : Math.floor(H(+seed * 7.31 + 2) * 600) || 0; return CROWD[((k % CROWD.length) + CROWD.length) % CROWD.length]; };
   const DOT = Object.freeze(PAL.map(p => p[0]));
   const RAMP = Object.freeze(['#2fc9b6', '#4f9bf2', '#a66ef0', '#f0708a', '#ffb547']);
   const rgb = c => {
@@ -330,6 +368,92 @@
       (L > .2 ? `<rect x="${f(180 - L)}" y="${f(ly - .65)}" width="${f(2 * L)}" height="1.3" rx=".65" fill="url(#gfc-uline)"/>` : '') +
       `<circle cx="180" cy="${f(ly)}" r="${f(1.9 * q(t, t0, .4))}" fill="${ACC}"/></g>`;
   }
+  // v2: крупный заголовок сверху, как в образце. Строки — через «/», *слово* — акцент: золото GOLD, крупнее (o.big), тёплое
+  // свечение. Montserrat 800 капсом; строка шире o.maxW ужимается целиком. Ширина 800 — таблица 700 × W800.
+  const W800 = 1.035;
+  function headBox(s, o = {}) {
+    const size = o.size ?? 26, big = o.big ?? 1.5, maxW = o.maxW ?? 300, ls = o.ls ?? .02, caps = o.caps ?? true;
+    const lines = String(s ?? '').split('/').map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean).map(line => {
+      const segs = line.split('*').map((tx, i) => ({ tx: caps ? tx.toUpperCase() : tx, acc: i % 2 === 1 })).filter(g => g.tx !== '');
+      let w = 0;
+      segs.forEach(g => { g.size = size * (g.acc ? big : 1); w += textW(g.tx, g.size, g.size * ls) * W800; });
+      const k = w > maxW ? maxW / w : 1;
+      segs.forEach(g => { g.size *= k; g.ls = g.size * ls; });
+      return { segs, w: w * k, size: Math.max(...segs.map(g => g.size)) };
+    });
+    let y = Math.max(50, o.y ?? 70);                       // выше 50 — под интерфейсом Reels
+    lines.forEach((L, i) => { if (i) y += .74 * L.size + (o.gap ?? .5) * lines[i - 1].size; L.y = y; });
+    const a = lines[0], b = lines[lines.length - 1];
+    return { lines, y0: a ? a.y - .74 * a.size : y, y1: b ? b.y + .22 * b.size : y };
+  }
+  function headline(s, t, t0 = 0, t1 = null, o = {}) {
+    if (s == null || s === '' || t < t0) return '';
+    const op = (o.op ?? o.opacity ?? 1) * (t1 != null ? out(t, t1 - .35, .35) : 1);
+    if (op <= .003) return '';
+    const B = headBox(s, o), x = o.x ?? 180, dur = o.dur ?? .3, stag = o.stagger ?? .1, glow = o.glow ?? 1;
+    const col = o.color ?? '#fff', acc = o.accent ?? GOLD;
+    const at = `x="${f(x)}" text-anchor="middle" font-family="${FF}" font-weight="${o.weight ?? 800}"`;
+    const spans = (L, fill) => L.segs.map(g => `<tspan font-size="${f(g.size)}" letter-spacing="${f(g.ls)}"${fill ? ` fill="${fill(g)}"` : ''}>${esc(g.tx)}</tspan>`).join('');
+    let sh = '', gl = '', tx = '';
+    B.lines.forEach((L, i) => {
+      const k = q(t, t0 + i * stag, dur); if (k <= .003) return;
+      const y = L.y + 8 * (1 - k);
+      sh += `<text ${at} y="${f(y + Math.max(1, L.size * .075))}" fill="${INK}" opacity="${f(k)}">${spans(L)}</text>`;
+      if (glow > .003 && L.segs.some(g => g.acc)) gl += `<text ${at} y="${f(y)}" opacity="${f(k)}">${spans(L, g => g.acc ? '#ffa040' : 'none')}</text>`;
+      tx += `<text ${at} y="${f(y)}" opacity="${f(k)}">${spans(L, g => g.acc ? acc : col)}</text>`;
+    });
+    return `<g opacity="${f(op)}"><g filter="url(#gfc-hblur)" opacity=".7">${sh}</g><g opacity=".55">${sh}</g>` +
+      (gl ? `<g filter="url(#gfc-glow3)" opacity="${f(.75 * glow)}">${gl}</g>` : '') + tx + '</g>';
+  }
+
+  // v2: значки для GFC.node — белые рисунки в круге радиуса 16 (поле ±10); c — цвет значка, d — тёмный цвет круга (детали)
+  const STAR5 = Array.from({ length: 10 }, (_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 3.9 : 9.4; return `${f(r * Math.cos(a))} ${f(r * Math.sin(a) + .7)}`; }).join(' L');
+  const ICONS = Object.freeze({
+    book: (c, d) => `<path d="M-.9 -5.6 C-3.6 -7.6 -7.2 -7.8 -9.8 -6.8 L-9.8 6.4 C-7.2 5.4 -3.6 5.6 -.9 7.4 Z M.9 -5.6 C3.6 -7.6 7.2 -7.8 9.8 -6.8 L9.8 6.4 C7.2 5.4 3.6 5.6 .9 7.4 Z" fill="${c}"/>` +
+      `<path d="M-7.8 -3.4 L-3.2 -2.7 M-7.8 -.4 L-3.2 .3 M-7.8 2.6 L-3.2 3.3 M3.2 -2.7 L7.8 -3.4 M3.2 .3 L7.8 -.4 M3.2 3.3 L7.8 2.6" stroke="${d}" stroke-width="1.1" stroke-linecap="round" opacity=".7"/>`,
+    heart: c => `<path d="M0 8.2 C-6.4 3.8 -9.8 .4 -9.8 -3.2 C-9.8 -6.4 -7.4 -8.4 -4.8 -8.4 C-2.8 -8.4 -1 -7.2 0 -5.2 C1 -7.2 2.8 -8.4 4.8 -8.4 C7.4 -8.4 9.8 -6.4 9.8 -3.2 C9.8 .4 6.4 3.8 0 8.2 Z" fill="${c}"/>`,
+    scales: c => `<path d="M0 -6.6 L0 7 M-4.6 7.6 L4.6 7.6 M-8.2 -4.8 L8.2 -4.8 M-8.2 -4.8 L-10.8 1.4 M-8.2 -4.8 L-5.6 1.4 M8.2 -4.8 L5.6 1.4 M8.2 -4.8 L10.8 1.4" stroke="${c}" stroke-width="1.7" stroke-linecap="round" fill="none"/>` +
+      `<path d="M-11.6 1.2 Q-8.2 6 -4.8 1.2 Z M4.8 1.2 Q8.2 6 11.6 1.2 Z" fill="${c}"/><circle cy="-7.4" r="1.7" fill="${c}"/>`,
+    star: c => `<path d="M${STAR5} Z" fill="${c}" stroke="${c}" stroke-width="1.3" stroke-linejoin="round"/>`,
+    leaf: (c, d) => `<path d="M-7.8 7.8 C-9 -1.6 -2.6 -9 8.6 -8.6 C9 2.2 2.4 8.8 -7.8 7.8 Z" fill="${c}"/>` +
+      `<path d="M-7.8 7.8 Q-1.2 1.2 5.4 -5.4 M-1.8 1.8 L-2.4 -2.8 M1.8 -1.8 L5.2 -1.2" stroke="${d}" stroke-width="1.2" stroke-linecap="round" fill="none" opacity=".75"/>`,
+    drop: (c, d) => `<path d="M0 -9.6 C3.6 -4.6 7.2 -.8 7.2 2.9 C7.2 7 4 9.4 0 9.4 C-4 9.4 -7.2 7 -7.2 2.9 C-7.2 -.8 -3.6 -4.6 0 -9.6 Z" fill="${c}"/>` +
+      `<path d="M-3.8 3.2 C-3.8 5.2 -2.6 6.5 -.8 6.9" stroke="${d}" stroke-width="1.4" stroke-linecap="round" fill="none" opacity=".6"/>`,
+    plus: c => `<rect x="-2.5" y="-8.6" width="5" height="17.2" rx="2.5" fill="${c}"/><rect x="-8.6" y="-2.5" width="17.2" height="5" rx="2.5" fill="${c}"/>`,
+    question: c => `<text y="7" font-family="${FF}" font-weight="800" font-size="20" text-anchor="middle" fill="${c}">?</text>`,
+    flame: (c, d) => `<path d="M0 -9.8 C3 -5.6 7.2 -2.8 7.2 2.6 C7.2 6.8 4 9.4 0 9.4 C-4 9.4 -7.2 6.8 -7.2 2.6 C-7.2 -.6 -5.4 -2.6 -3.9 -4.3 C-3.7 -1.6 -2.5 0 -1 .5 C-1.6 -3.6 -1 -6.9 0 -9.8 Z" fill="${c}"/>` +
+      `<path d="M0 1.2 C1.9 3.2 3.3 4.6 3.3 6.2 C3.3 7.8 1.9 8.8 0 8.8 C-1.9 8.8 -3.3 7.8 -3.3 6.2 C-3.3 4.6 -1.9 3.2 0 1.2 Z" fill="${d}" opacity=".5"/>`,
+    human: c => `<circle cy="-7.4" r="4.2" fill="${c}"/><path d="M-6.4 9 L-5.4 -.8 C-5 -2.7 -3.2 -3.4 0 -3.4 C3.2 -3.4 5 -2.7 5.4 -.8 L6.4 9 Z" fill="${c}"/>`,
+    cell: c => `<circle r="8.5" fill="none" stroke="${c}" stroke-width="1.9"/><circle cx="1.6" cy="-1.2" r="3.3" fill="${c}"/><circle cx="-3.6" cy="3.2" r="1.2" fill="${c}" opacity=".85"/><circle cx="-2.4" cy="-4.4" r=".9" fill="${c}" opacity=".85"/>`,
+    fish: c => `<path d="M9 0 C5.5 -5.4 -2.5 -5.6 -6 0 C-2.5 5.6 5.5 5.4 9 0 Z M-5 0 L-11.5 -5.4 L-9.6 0 L-11.5 5.4 Z M-.5 -4.4 L3 -7.6 L4.2 -3.8 Z" fill="${c}"/>`,
+    eye: (c, d) => `<path d="M-10.4 0 C-6.6 -6.6 6.6 -6.6 10.4 0 C6.6 6.6 -6.6 6.6 -10.4 0 Z" fill="${c}"/><circle r="3.9" fill="${d}"/><circle cx="-1.2" cy="-1.2" r="1.2" fill="${c}"/>`,
+  });
+  // v2: цветной кружок со значком (как значки на ветвях в образце): o.color (номер/имя PAL или цвет-строка; без него — по
+  // o.seed, как у людей), o.op, o.scale (1; появление — 0→1), o.glow=1 (мягкое свечение цвета круга), o.shadow=1 (тень под
+  // кругом), o.ink='#fff' (цвет значка), o.ring=1 (светлая обводка). icon — имя из GFC.ICONS, свой SVG (строка с «<», поле ±10
+  // при r=16) или короткий текст («150», «?», «1»).
+  function node(x, y, r, icon, o = {}) {
+    const op = o.op ?? o.opacity ?? 1, sc = o.scale ?? 1;
+    if (op <= .003 || sc <= .003 || !(r > 0)) return '';
+    const C = paint(o.color ?? pick(o.seed ?? 1)), k = r / 16, ink = o.ink ?? '#fff';
+    const glow = o.glow ?? 1, shadow = o.shadow ?? 1, ring = o.ring ?? 1;
+    let s = shadow > .003 ? `<ellipse cx="${f(r * .12)}" cy="${f(r * .98)}" rx="${f(r * .78)}" ry="${f(r * .2)}" fill="#0a0626" opacity="${f(.5 * shadow)}" filter="url(#gfc-blur)"/>` : '';
+    if (glow > .003) s += `<circle r="${f(r * 1.45)}" fill="${C.light}" opacity="${f(.3 * glow)}" filter="url(#gfc-glow3)"/>`;
+    s += `<circle r="${f(r)}" fill="${C.fill}"/><circle r="${f(r)}" fill="url(#gfc-shade)"/>`;
+    if (ring > .003) s += `<circle r="${f(r - .8 * k)}" fill="none" stroke="${mixC(C.light, '#ffffff', .5)}" stroke-width="${f(1.5 * k)}" opacity="${f(.8 * ring)}"/>`;
+    s += `<path d="M${f(-r * .62)} ${f(-r * .36)} A${f(r * .72)} ${f(r * .72)} 0 0 1 ${f(-r * .1)} ${f(-r * .71)}" fill="none" stroke="#fff" stroke-width="${f(1.3 * k)}" stroke-linecap="round" opacity=".38"/>`;
+    let ic = '';
+    if (typeof icon === 'function') ic = icon(ink, C.dark);
+    else if (icon != null && ICONS[icon]) ic = ICONS[icon](ink, C.dark);
+    else if (icon != null && String(icon).trim()[0] === '<') ic = String(icon);
+    else if (icon != null && icon !== '') {
+      const str = String(icon).toUpperCase(), sz = Math.min(15, 24 / Math.max(.01, textW(str, 1) * W800));
+      ic = `<text y="${f(sz * .36)}" font-family="${FF}" font-weight="800" font-size="${f(sz)}" text-anchor="middle" fill="${ink}">${esc(str)}</text>`;
+    }
+    if (ic) s += `<g transform="scale(${k.toFixed(4)})">${ic}</g>`;
+    return `<g opacity="${f(op)}" transform="translate(${f(x)} ${f(y)}) scale(${(+sc).toFixed(4)})">${s}</g>`;
+  }
+
   function arrow(x0, y, x1, o = {}) {
     const op = o.op ?? .8; if (op <= .003) return '';
     const wd = o.w ?? 1.6, c = o.color ?? '#fff', d = Math.sign(x1 - x0) || 1, hl = 4 + wd * 2.2, hw = 2.4 + wd * 1.5;
@@ -384,8 +508,36 @@
     }
     return `<g opacity="${f(op)}">${s}</g>`;
   }
-  // мягкая площадка под людьми; o.warm — тёплый отсвет огня
+  // v2: холмы и горизонт под сценой (как в образце): o.y=300 — линия горизонта (гребень ближней земли в центре), o.op=1,
+  // o.glow=1 — мягкий свет над горизонтом, o.warm — тёплый отсвет огня на земле, o.seed — рисунок гребней, o.far=1 / o.mid=1 —
+  // дальние / средние холмы (0 — без них). Земля уходит вниз до маски субтитров, по бокам мягко гаснет.
+  function ridge(base, amp, n, seed) {
+    const P = [];
+    for (let i = 0; i <= n; i++) P.push([lerp(-40, 400, i / n), base - amp * (.35 + .65 * H(seed * 17.3 + i * 3.1))]);
+    let d = `M-40 ${f(base + 200)} L${f(P[0][0])} ${f(P[0][1])}`;
+    for (let i = 0; i < n; i++) { const a = P[i], b = P[i + 1]; d += ` Q${f(a[0] + (b[0] - a[0]) * .5)} ${f(Math.min(a[1], b[1]) - amp * .25)} ${f(b[0])} ${f(b[1])}`; }
+    return { d: d + ` L400 ${f(base + 200)} Z`, top: d.replace(/^M[^L]*L/, 'M') };
+  }
+  function hills(o = {}) {
+    const op = o.op ?? 1; if (op <= .003) return '';
+    const y = o.y ?? 300, sd = o.seed ?? 0, glow = o.glow ?? 1, far = o.far ?? 1, mid = o.mid ?? 1;
+    let s = glow > .003 ? `<ellipse cx="180" cy="${f(y - 34)}" rx="250" ry="54" fill="url(#gfc-hglowG)" opacity="${f(glow)}"/>` : '';
+    if (far > .003) {
+      const R = ridge(y - 20, 22, 5, sd + 1);
+      s += `<g opacity="${f(far)}"><path d="${R.d}" fill="#4b2a96"/><path d="${R.top}" fill="none" stroke="#b89aff" stroke-width="1.2" opacity=".55"/></g>`;
+    }
+    if (mid > .003) {
+      const R = ridge(y - 6, 12, 4, sd + 7);
+      s += `<g opacity="${f(mid)}"><path d="${R.d}" fill="#381f80"/><path d="${R.top}" fill="none" stroke="#9c7ef2" stroke-width="1.1" opacity=".42"/></g>`;
+    }
+    s += `<path d="M-40 ${f(y + 9)} C90 ${f(y - 4)} 270 ${f(y - 4)} 400 ${f(y + 9)} L400 ${f(y + 200)} L-40 ${f(y + 200)} Z" fill="url(#gfc-hill)"/>` +
+      `<path d="M-40 ${f(y + 9)} C90 ${f(y - 4)} 270 ${f(y - 4)} 400 ${f(y + 9)}" fill="none" stroke="#9a7cf0" stroke-width="1.2" opacity=".42"/>`;
+    if (o.warm > .003) s += `<ellipse cx="180" cy="${f(y + 16)}" rx="175" ry="42" fill="url(#gfc-halo)" opacity="${f(o.warm)}"/>`;
+    return `<g opacity="${f(op)}" mask="url(#gfc-hmask)">${s}</g>`;
+  }
+  // мягкая площадка под людьми; o.warm — тёплый отсвет огня. v2: GFC.ground(o) (первый аргумент — объект или нет) — холмы hills
   function ground(cx, y, rx, ry, o = {}) {
+    if (cx == null || typeof cx === 'object') return hills(cx || {});
     const op = o.op ?? 1; if (op <= .003) return '';
     ry = ry ?? rx * .2;
     return `<g opacity="${f(op)}"><ellipse cx="${f(cx)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry)}" fill="url(#gfc-ground)"/>` +
@@ -435,7 +587,7 @@
   };
   function person(cx, gy, h, o = {}) {
     const op = o.opacity ?? o.op ?? 1; if (op <= .003 || !(h > 0)) return '';
-    const R = rig(h, o), C = paint(o.color ?? 0);
+    const R = rig(h, o), C = paint(o.color ?? pick(o.seed ?? 0));   // без цвета — по seed (seed 0 — коралл, как в v1)
     const armD = R.arms.map(a => `M${f(a[0][0])} ${f(a[0][1])} Q${f(a[1][0])} ${f(a[1][1])} ${f(a[2][0])} ${f(a[2][1])}`).join(' ');
     const bodyD = tunic(R.hem, R.lift), head = `<circle cx="0" cy="${f(R.headY)}" r="${f(R.hr)}"`;
     const shape = (fill, arm) => `<path d="${armD}" fill="none" stroke="${arm}" stroke-width="9" stroke-linecap="round"/><path d="${bodyD}" fill="${fill}"/>${head} fill="${fill}"/>`;
@@ -464,7 +616,14 @@
   const g = (id, stops, at = '') => `<linearGradient id="${id}" ${at}>${stops.map(([o, c, a]) => `<stop offset="${o}" stop-color="${c}"${a != null ? ` stop-opacity="${a}"` : ''}/>`).join('')}</linearGradient>`;
   const DEFS = `<defs>
     ${PAL.map(([a, b], i) => g(`gfc-p${i}`, [[0, a], [1, b]], 'x1="0" y1="0" x2=".7" y2="1"')).join('')}
-    ${g('gfc-bg', [[0, '#2e0f5e'], [.3, '#271466'], [.5, '#18195e'], [.6, '#10154a'], [.75, '#0a0e33'], [1, '#070a24']], 'gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="640"')}
+    ${g('gfc-bg', [[0, '#3d0f6c'], [.14, '#36106e'], [.3, '#2a146c'], [.5, '#19195f'], [.6, '#10154a'], [.75, '#0a0e33'], [1, '#070a24']], 'gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="640"')}
+    <radialGradient id="gfc-top"><stop offset="0" stop-color="#c24ad8" stop-opacity=".3"/><stop offset=".5" stop-color="#8a34c8" stop-opacity=".13"/><stop offset="1" stop-color="#5a24a8" stop-opacity="0"/></radialGradient>
+    ${g('gfc-hill', [[0, '#301c72'], [.1, '#26175f'], [.26, '#1b1550'], [.5, '#121342'], [1, '#0c0f36']], 'x1="0" y1="0" x2="0" y2="1"')}
+    <radialGradient id="gfc-hglowG"><stop offset="0" stop-color="#d27cff" stop-opacity=".26"/><stop offset=".45" stop-color="#9a4ae0" stop-opacity=".11"/><stop offset="1" stop-color="#6a30c0" stop-opacity="0"/></radialGradient>
+    ${g('gfc-hx', [[0, '#000'], [.14, '#fff'], [.86, '#fff'], [1, '#000']], 'gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="360" y2="0"')}
+    <mask id="gfc-hmask" maskUnits="userSpaceOnUse" x="-400" y="-640" width="1160" height="1920" style="mask-type:luminance"><rect x="0" y="-640" width="360" height="1920" fill="url(#gfc-hx)"/></mask>
+    <filter id="gfc-hblur" x="-30%" y="-100%" width="160%" height="300%"><feGaussianBlur stdDeviation="2.4"/></filter>
+    <filter id="gfc-glow3" x="-60%" y="-120%" width="220%" height="340%"><feGaussianBlur stdDeviation="3.4"/></filter>
     ${g('gfc-shade', [[0, '#fff', .24], [.42, '#fff', 0], [.58, INK, 0], [1, INK, .32]], 'x1="0" y1="0" x2=".8" y2="1"')}
     ${g('gfc-time', RAMP.map((c, i) => [i / (RAMP.length - 1), c]), 'x1="0" y1="0" x2="1" y2="0"')}
     ${g('gfc-uline', [[0, ACC, 0], [.25, ACC, .9], [.75, ACC, .9], [1, ACC, 0]], 'x1="0" y1="0" x2="1" y2="0"')}
@@ -493,7 +652,7 @@
   }));
   const GLINTS = [[40, 126, 1], [322, 150, 1.15], [292, 236, .75], [62, 212, .8], [-24, 58, .9], [404, 44, 1], [428, 252, .8], [-34, 262, .7], [180, -40, .8]];
   function sky(t = 0) {
-    let s = '<ellipse cx="180" cy="150" rx="330" ry="250" fill="url(#gfc-neb)"/>';
+    let s = '<ellipse cx="180" cy="0" rx="430" ry="240" fill="url(#gfc-top)"/><ellipse cx="180" cy="150" rx="330" ry="250" fill="url(#gfc-neb)"/>';
     for (const [x, y, r, c, sp, ph, k] of STARS) {
       if (k <= .01) continue;
       const tw = .5 + .5 * Math.sin(t * sp + ph);
@@ -531,45 +690,46 @@
   window.GFC = Object.freeze({ scene, T, TE, w, we, q, qq, out, ease, clamp, lerp, hash: H, noise, bare,
     cloud, lattice, hexPts, personPts, jitter, drift, morph, dots,
     hex, comb, spark, mono, label, italic, typed, thinker, arrow, line, lx, person, anchors, wrap, dissolve, zoom,
-    thread, polyline, beam, ground, fs, textW, mixC, ramp, PAL, DOT, RAMP, INK, SUN, ACC, RED });
+    thread, polyline, beam, ground, fs, textW, mixC, ramp, PAL, DOT, RAMP, INK, SUN, ACC, RED,
+    headline, headBox, hills, node, ICONS, pick, NAME, CROWD, GOLD, version: 2 });
 
-  /* Проверочный лист стиля: хаос → соты → люди → огонь порядка → линия времени. */
+  /* Проверочный лист стиля v2 (9 с, три момента, как образец style_flatcolor.jpg): 0–3 заголовок, холмы, разноцветные люди
+   * (без o.color — по seed) вокруг огня порядка с нитями; 3–6 кольцо значков GFC.node вокруг огня, разноцветные точки;
+   * 6–9 прежние функции v1: соты, частицы хаос → порядок, линия времени, подпись мыслителя. */
   SCENES.gfc_style = scene('gfc_style', t => {
-    const A = cloud(300, 4, [30, 40, 330, 330]), B = hexPts(180, 185, 22, 6, 7);
+    const k1 = out(t, 2.8, .25), k2 = q(t, 3.0, .25) * out(t, 5.8, .25), k3 = q(t, 6.0, .25);
     let s = '';
-    // 1. хаос: цветные точки дрожат → собираются в соты, плитки проявляются волной от центра
-    if (t < 4.2) {
-      const k = qq(t, .5, 1.8), fade = out(t, 3.3, .7);
-      s += comb(180, 185, 22, 6, 7, { op: fade, lit: (i, x, y) => { const d = Math.hypot(x - 180, y - 185) / 220; return qq(t, 1.25 + d, 1.85 + d); } });
-      s += dots(morph(jitter(A, t, 3), B, k, t), { op: (.6 + .35 * k) * fade * (1 - .55 * qq(t, 2.0, 2.6)), t, r: 1.6 });
-      s += mono(180, 326, k < .5 ? 'ХАОС' : 'ПОРЯДОК', { size: 10, anchor: 'middle', opacity: .85 * q(t, .2, .3) * fade * (1 - Math.sin(Math.PI * clamp((k - .35) / .3)) * .9), color: k < .5 ? '#8ccbff' : ACC });
+    if (k1 > .003) {
+      const S = [180, 166], GYb = 270, GYf = 318;
+      let g = hills({ y: 262, warm: .5 });
+      const P = [[64, GYb, 62], [134, GYb - 6, 56], [226, GYb - 6, 56], [296, GYb, 62], [92, GYf, 84], [180, GYf + 6, 90], [268, GYf, 84]];
+      P.forEach(([x, gy, h], i) => { if (i < 4) g += person(x, gy, h, { t, seed: i + 1, up: i === 1 || i === 2 ? .35 : 0, lit: .6, rim: x < 180 ? .8 : -.8 }); });
+      P.forEach(([x, gy, h], i) => { const a = anchors(x, gy, h, {}); g += beam([S[0], S[1] + 12], [a.top[0], a.top[1] - 2], t, { phase: i * .37 }); });
+      g += spark(S[0], S[1], 16, { t });
+      P.forEach(([x, gy, h], i) => { if (i >= 4) g += person(x, gy, h, { t, seed: i + 1, shade: .15, rim: x < 180 ? .6 : x > 180 ? -.6 : 0 }); });
+      g += headline('Зачем людям / *боги?*', t, .2, 2.9);
+      s += `<g opacity="${f(k1)}">${g}</g>`;
     }
-    // 2. люди: двое входят шагом с краёв, трое встают в центре; 3. огонь порядка над ними, нити к головам, руки вверх
-    const ppl = t > 3.0 ? 1 : 0, fire = qq(t, 4.9, 5.5), GY = 276;
-    if (ppl) {
-      s += ground(180, GY + 3, 158, 24, { op: q(t, 3.4, .6), warm: .55 * fire });
-      const walkIn = qq(t, 3.0, 5.0), stop = qq(t, 4.7, 5.2);
-      const P = [[lerp(-24, 56, walkIn), 72, 1, 1 - stop, 1], [118, 84, 3, 0, 1], [180, 94, 0, 0, 1], [242, 84, 2, 0, -1], [lerp(384, 304, walkIn), 72, 1, 1 - stop, -1]];
-      const pk = i => i % 4 === 0 ? 1 : q(t, 3.5 + Math.abs(i - 2) * .18, .5);
-      const order = [0, 4, 1, 3, 2];
-      for (const i of order) {
-        const [x, h, c, wk, dir] = P[i], k = pk(i);
-        s += person(x, GY + 10 * (1 - k), h, { color: c, t, walk: wk, dir, up: i % 4 ? qq(t, 5.2 + Math.abs(i - 2) * .12, 5.8 + Math.abs(i - 2) * .12) : 0,
-          opacity: k, lit: .7 * fire, rim: x < 180 ? fire : x > 180 ? -fire : 0, seed: i + 1 });
-      }
-      const sx = 180, sy = 120;
-      if (fire > .003) {
-        P.forEach(([x, h, c, wk, dir], i) => {
-          const a = anchors(x, GY, h, { up: i % 4 ? 1 : 0 });
-          s += beam([sx, sy + 9], [a.top[0], a.top[1] - 2], t, { op: fire * .9, phase: i * .37 });
-        });
-      }
-      s += spark(sx, sy, 10, { t, op: fire });
-      s += label(180, 66 + 5 * (1 - qq(t, 5.0, 5.5)), 'ОГОНЬ ПОРЯДКА', { size: 21, color: ACC, opacity: qq(t, 5.0, 5.5) });
+    if (k2 > .003) {
+      const C = [180, 222], names = ['book', 'heart', 'scales', 'star', 'leaf', 'drop', 'plus', 'question'];
+      let g = hills({ y: 320, far: .6 });
+      g += dots(jitter(cloud(70, 9, [24, 140, 336, 320]), t, 2, 4), { r: 1.5, op: .8, t });
+      const N = names.map((nm, i) => { const a = -Math.PI / 2 + i / names.length * TAU; return [C[0] + 120 * Math.cos(a), C[1] + 84 * Math.sin(a), nm, i]; });
+      N.forEach(([x, y, nm, i]) => { g += beam([C[0], C[1]], [x, y], t, { op: q(t, 3.3 + i * .12, .3), phase: i * .21, color: PAL[pick(i + 1)][0], bend: .12 }); });
+      g += spark(C[0], C[1], 14, { t });
+      N.forEach(([x, y, nm, i]) => { const k = q(t, 3.2 + i * .12, .35); g += node(x, y + 1.2 * Math.sin(t * 2.1 + i), 17, nm, { seed: i + 1, scale: .6 + .4 * k, op: k }); });
+      g += headline('Одни заповеди / *на всех*', t, 3.1, null);
+      s += `<g opacity="${f(k2)}">${g}</g>`;
     }
-    // 4. линия времени под людьми
-    s += line({ y: 318, op: qq(t, 6.4, 7.1), now: .62 });
-    s += thinker('ШРЁДИНГЕР · «ЧТО ТАКОЕ ЖИЗНЬ?» · 1944', t, .3, 3.8);
+    if (k3 > .003) {
+      const A = cloud(260, 4, [30, 120, 330, 320]), B = hexPts(180, 222, 21, 6, 6), k = qq(t, 6.3, 7.4);
+      let g = comb(180, 222, 21, 6, 6, { lit: (i, x, y) => { const d = Math.hypot(x - 180, y - 222) / 220; return qq(t, 6.9 + d, 7.5 + d); } });
+      g += dots(morph(jitter(A, t, 3), B, k, t), { op: (.6 + .35 * k) * (1 - .55 * qq(t, 7.5, 8.1)), t, r: 1.5 });
+      g += line({ y: 336, op: qq(t, 7.6, 8.2), now: .62 });
+      g += thinker('Шрёдингер · «Что такое жизнь?» · 1944', t, 6.1, null);
+      g += label(180, 100, k < .5 ? 'хаос' : 'порядок', { size: 21, color: k < .5 ? '#8ccbff' : ACC, opacity: q(t, 6.2, .3) });
+      s += `<g opacity="${f(k3)}">${g}</g>`;
+    }
     return s;
   });
 })();
