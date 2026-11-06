@@ -1,6 +1,6 @@
 """Альтернативная версия «Бог ещё не создан», часть 2 — дизайн «Цветная инфографика» (выбор владельца 05.11).
 
-Тот же утверждённый текст v12, та же озвучка и звук, что у eps/god_future_p2; та же раскадровка (BEATS, слитые фразы,
+Тот же утверждённый текст (основная версия, 06.11), та же озвучка и звук, что у eps/god_future_p2; та же раскадровка (BEATS, слитые фразы,
 подписи-источники) — сцены gf_* заменены своими gfc_* (engine/scenes/gfc_*.js, словарь gfc_00_lib.js).
 Голос и слова — копии eps/god_future_p2/build (words.json, tts_manifest.json) и audio/voice_*.wav.
 """
@@ -17,4 +17,5 @@ _spec.loader.exec_module(base)   # eps/god_future_p2/story.py: BEATS, SOURCES, A
 BEATS = [(pid, "gfc_" + scene[3:], mode, *cue) for pid, scene, mode, *cue in base.BEATS]
 
 if __name__ == "__main__":
-    build(Path(__file__).resolve().parent, BEATS, base.SOURCES, aliases=base.ALIASES, views=getattr(base, "VIEWS", ()))
+    build(Path(__file__).resolve().parent, BEATS, base.SOURCES, aliases=getattr(base, "ALIASES", None), views=getattr(base, "VIEWS", ()),
+          page_starts=("d09.11", "d09.16"))   # как в eps/god_future_p2/story.py

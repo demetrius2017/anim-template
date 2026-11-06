@@ -4,7 +4,8 @@ Same as eps/time_states_p1/qa_deliver.py: out/<part>.mp4 -> delivery/<part>.mp4 
 then on THAT file: loudness (−14 LUFS ±0.5, true peak ≤ −1 dBTP), still stretches > 3 s (picture zone only: the
 captions of the safe layout start at 52 % of the height), Whisper on tesla against script.json (spans joined), length
 < 180 s. The ring (first frame = last frame) is measured, not gated. Plus, on tesla from the delivery copy:
-  qa/blind_view/<p>_sheet_%d.jpg — fps=1/2, 270×480, tile 6×5 (sheet K, frame N = (K−1)·60 + (N−1)·2 s);
+  qa/blind_view/<p>_sheet_%d.jpg — every 60th frame of 30 fps (exactly 0, 2, 4 … s; fps=1/2 took the last frame of ±1 s,
+  i.e. ≈ +1 s — found 06.11), 270×480, tile 6×5 (sheet K, frame N = (K−1)·60 + (N−1)·2 s);
   qa/blind_view/<p>_text.md      — the voice-over with the start of every phrase (min:sec) and the sheet scheme;
   qa/blind_view/safe_zone_check.jpg — key frames under the platform mask: top 14 %, bottom 35 %, right 15 % (red),
                                        the text zone of story.safe (green).
@@ -99,7 +100,7 @@ def sheets():
     BV.mkdir(parents=True, exist_ok=True)
     for f in BV.glob(f"{PART}_sheet_*.jpg"):
         f.unlink()
-    run("ffmpeg", "-v", "error", "-y", "-i", OUT, "-vf", "fps=1/2,scale=270:480,tile=6x5", "-q:v", "3",
+    run("ffmpeg", "-v", "error", "-y", "-i", OUT, "-vf", "select=not(mod(n\\,60)),scale=270:480,tile=6x5", "-vsync", "vfr", "-q:v", "3",
         BV / f"{PART}_sheet_%d.jpg")
     run("ffmpeg", "-v", "error", "-y", "-i", OUT, "-vf", "select=eq(n\\,0)", "-frames:v", "1", QA / "phone_first.png")
     run("ffmpeg", "-v", "error", "-y", "-sseof", "-0.4", "-i", OUT, "-update", "1", QA / "phone_last.png")   # last decoded frame
@@ -136,7 +137,7 @@ def blind_text(names):
     card = json.loads((WORK / "build/script.json").read_text())["end_card"]["text"]
     dur = words["duration"]
     mmss = lambda s: f"{int(s // 60)}:{s % 60:04.1f}"
-    lines = [f"Ролик: YouTube Shorts / Instagram Reels 9:16, ≈{int(dur // 60)}:{int(dur % 60):02d}, часть {NAME[-1]} из двух.",
+    lines = [f"Ролик: YouTube Shorts / Instagram Reels 9:16, ≈{int(dur // 60)}:{int(dur % 60):02d}, часть {NAME[-1]} из трёх.",
              f"Листы кадров: {', '.join(names)} — по 30 кадров (6 в ряд, 5 рядов), кадр каждые 2 секунды. "
              "Кадр №N на листе K (слева направо, сверху вниз, с 1) = секунда (K−1)·60 + (N−1)·2.",
              "Ниже — закадровый текст с временем начала каждой фразы (мин:сек).", ""]
