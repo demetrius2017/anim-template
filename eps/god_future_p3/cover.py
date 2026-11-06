@@ -1,5 +1,5 @@
-"""Обложка 3:4 (1080×1440) части 3 «Бог будущего» из кадра сданного файла — по образцу eps/time_states_p1/cover.py:
-крупно «ЧАСТЬ 3» сверху, кадр, короткий заголовок снизу (2 строки). Окно кадра — без полосы субтитров (в раскладке
+"""Обложка 3:4 (1080×1440) части 3 «Бог будущего» из кадра сданного файла: «ЧАСТЬ 3» и заголовок (2 строки) — ВВЕРХУ,
+под ними кадр; внизу текста нет — его закрывают значки рейтинга и просмотров (владелец 06.11, docs/FORMAT.md «Обложка»). Окно кадра — без полосы субтитров (в раскладке
 story.safe верх субтитров ≈ 1007 px кадра 1080×1920): y 170…1000. ffmpeg drawtext — на tesla (правило владельца).
 
     python3 eps/god_future_p3/cover.py            # все варианты -> delivery/cover_<k>.jpg
@@ -16,7 +16,7 @@ VARIANTS = {"A": (75.8, ["ИИ — НОВЫЙ", "МЕССИЯ?"]),
             "B": (50.6, ["УЧИТЕЛЬ", "ИЛИ СУДЬЯ?"]),
             "C": (104.6, ["КОГО МЫ", "РАСТИМ?"])}
 PART = "ЧАСТЬ 3"
-CROP_Y, PIC_H, PIC_Y = 170, 830, 236
+CROP_Y, PIC_H, PIC_Y = 170, 830, 560   # кадр ниже текста; нижние ≈ 30 % обложки — только картинка
 
 
 def out(k):
@@ -32,10 +32,10 @@ def remote():
             texts.append(p)
         dt = f"drawtext=fontfile={FONT}:fontcolor=white:x=(w-text_w)/2"
         vf = ",".join([
-            f"crop=1080:{PIC_H}:0:{CROP_Y}", f"pad=1080:1440:0:{PIC_Y}:black",
+            f"crop=1080:{PIC_H}:0:{CROP_Y}", f"pad=1080:{PIC_Y + PIC_H}:0:{PIC_Y}:black", "crop=1080:1440:0:0",
             f"{dt}:textfile={texts[0]}:fontsize=168:borderw=3:bordercolor=white:y=34",
-            f"{dt}:textfile={texts[1]}:fontsize=106:y={PIC_Y + PIC_H + 24}",
-            f"{dt}:textfile={texts[2]}:fontsize=106:y={PIC_Y + PIC_H + 24 + 120}",
+            f"{dt}:textfile={texts[1]}:fontsize=106:y=226",
+            f"{dt}:textfile={texts[2]}:fontsize=106:y=346",
         ])
         subprocess.run(["/usr/bin/ffmpeg", "-v", "error", "-y", "-ss", str(t), "-i", str(SRC), "-frames:v", "1",
                         "-vf", vf, "-q:v", "2", str(out(k))], check=True)
